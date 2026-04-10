@@ -1,7 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 const app = express();
 
@@ -10,19 +16,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/fitstart')
-  .then(() => console.log('MongoDB Connected ✅'))
+// Serve uploaded profile pictures as static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// MongoDB Connection 
+// It now looks for MONGO_URI in your .env file first
+const dbURI = process.env.MONGO_URI;
+
+mongoose.connect(dbURI)
+  .then(() => console.log('MongoDB Atlas Connected ✅'))
   .catch(err => {
-    console.error('MongoDB Connection Error:', err);
+    console.error('MongoDB Connection Error ❌:', err.message);
+    // If it fails, check your Password or IP Whitelist in Atlas
     process.exit(1);
   });
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const exerciseRoutes = require('./routes/exerciseRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/exercises', exerciseRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Test route
 app.get('/', (req, res) => {
