@@ -97,12 +97,15 @@ router.get('/profile', verifyToken, async (req, res) => {
 // PATCH /api/auth/journey — bulk-update journey progress (used for reset / init)
 router.patch('/journey', verifyToken, async (req, res) => {
   try {
-    const { totalDays, workoutPlace, completedDays, currentStreak } = req.body;
+    const { totalDays, workoutPlace, completedDays, currentStreak, startDate } = req.body;
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Set startDate on very first save
-    if (!user.journeyData.startDate && totalDays) {
+    // Accept an explicit startDate from the client (sent on journey creation).
+    // Fall back to setting it now if it still isn't set and totalDays is provided.
+    if (startDate && !user.journeyData.startDate) {
+      user.journeyData.startDate = new Date(startDate);
+    } else if (!user.journeyData.startDate && totalDays) {
       user.journeyData.startDate = new Date();
     }
     if (totalDays      !== undefined) user.journeyData.totalDays     = totalDays;
@@ -332,6 +335,35 @@ router.post('/admin-reset', async (req, res) => {
     await user.save();
     await DayHistory.deleteMany({ userId: user._id });
     res.json({ message: `Journey reset for ${username}`, journeyData: user.journeyData });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/auth/admin/stats — owner-only stats dashboard
+router.get('/admin/stats', async (req, res) => {
+  try {
+    const { secret } = req.query;
+    if (secret !== 'fitstart_admin_2024') return res.status(403).json({ message: 'Forbidden' });
+
+    const totalUsers      = await User.countDocuments();
+    const sevenDaysAgo    = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const newUsersThisWeek = await User.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
+    const recentlyActive   = await User.countDocuments({ 'journeyData.lastActiveDate': { $gte: sevenDaysAgo } });
+    const vegCount         = await User.countDocuments({ 'preferences.dietType': 'veg' });
+    const nonvegCount      = await User.countDocuments({ 'preferences.dietType': 'nonveg' });
+
+    // All users — include password hash so admin can see it
+    const allUsers    = await User.find().sort({ createdAt: -1 }).lean();
+    const newUsers    = await User.find({ createdAt: { $gte: sevenDaysAgo } }).sort({ createdAt: -1 }).lean();
+    const activeUsers = await User.find({ 'journeyData.lastActiveDate': { $gte: sevenDaysAgo } })
+      .sort({ 'journeyData.lastActiveDate': -1 }).lean();
+
+    res.json({
+      totalUsers, newUsersThisWeek, recentlyActive,
+      dietBreakdown: { veg: vegCount, nonveg: nonvegCount },
+      allUsers, newUsers, activeUsers,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
