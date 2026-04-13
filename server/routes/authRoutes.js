@@ -30,6 +30,19 @@ function calcStreak(sortedDays) {
   return streak;
 }
 
+// ── Derive currentDay from completedDays (never store it — it's always fresh) ─
+// currentDay = next day to complete = completedDays.length + 1 (min 1)
+function deriveCurrentDay(journeyData) {
+  return (journeyData.completedDays || []).length + 1;
+}
+
+// ── Serialise journeyData + inject currentDay ────────────────────────────────
+function serializeJourney(journeyData) {
+  const obj = typeof journeyData.toObject === 'function' ? journeyData.toObject() : { ...journeyData };
+  obj.currentDay = deriveCurrentDay(obj);
+  return obj;
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // AUTH ROUTES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -115,7 +128,7 @@ router.patch('/journey', verifyToken, async (req, res) => {
     user.journeyData.lastActiveDate = new Date();
 
     await user.save();
-    res.json({ message: 'Journey updated', journeyData: user.journeyData });
+    res.json({ message: 'Journey updated', journeyData: serializeJourney(user.journeyData) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -153,7 +166,7 @@ router.patch('/journey-length', verifyToken, async (req, res) => {
 
     res.json({
       message: 'Journey length updated',
-      journeyData: user.journeyData,
+      journeyData: serializeJourney(user.journeyData),
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -231,7 +244,7 @@ router.post('/complete-day', verifyToken, async (req, res) => {
 
     res.json({
       message:     'Day completed',
-      journeyData: user.journeyData,
+      journeyData: serializeJourney(user.journeyData),
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -260,7 +273,8 @@ router.get('/history', verifyToken, async (req, res) => {
 // This is the ONLY place selections can change. Login never touches preferences.
 router.patch('/preferences', verifyToken, async (req, res) => {
   try {
-    const { dietType, workoutDays, workoutPlanId, username } = req.body;
+    const { dietType, workoutDays, workoutPlanId, username, restDay,
+            saveDiet, saveWorkout, lastCompletedDay } = req.body;
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -269,6 +283,20 @@ router.patch('/preferences', verifyToken, async (req, res) => {
     if (dietType      !== undefined) user.preferences.dietType      = dietType      || null;
     if (workoutDays   !== undefined) user.preferences.workoutDays   = workoutDays   || null;
     if (workoutPlanId !== undefined) user.preferences.workoutPlanId = workoutPlanId || null;
+
+    // restDay: persist the user's chosen rest day (e.g. 'Sunday', 'Saturday')
+    // Falls back to 'Sunday' if cleared. Never stored as null.
+    if (restDay !== undefined && restDay) user.preferences.restDay = restDay;
+
+    // "Save for future" checkbox flags — only update if explicitly sent
+    if (saveDiet    !== undefined) user.preferences.saveDiet    = !!saveDiet;
+    if (saveWorkout !== undefined) user.preferences.saveWorkout = !!saveWorkout;
+
+    // lastCompletedDay — updated after each day completion from StreakPage
+    if (lastCompletedDay !== undefined) user.preferences.lastCompletedDay = lastCompletedDay;
+
+    // Always stamp the time of last preference change
+    user.preferences.prefsUpdatedAt = new Date();
 
     // Allow username change through this route
     if (username !== undefined && username.trim().length >= 2) {
@@ -282,6 +310,34 @@ router.patch('/preferences', verifyToken, async (req, res) => {
       message:     'Preferences saved',
       preferences: user.preferences,
       username:    user.username,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// UPDATE BODY STATS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// PATCH /api/auth/update-body-stats — update height, weight, age
+router.patch('/update-body-stats', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const { height, weight, age } = req.body;
+
+    if (height !== undefined && height > 0 && height <= 300) user.height = Number(height);
+    if (weight !== undefined && weight > 0 && weight <= 500) user.weight = Number(weight);
+    if (age    !== undefined && age    > 0 && age    <= 120)  user.age    = Number(age);
+
+    await user.save();
+    res.json({
+      message: 'Body stats updated',
+      height: user.height,
+      weight: user.weight,
+      age:    user.age,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -315,7 +371,7 @@ router.patch('/reset-journey', verifyToken, async (req, res) => {
     // Also wipe DayHistory for this user
     await DayHistory.deleteMany({ userId: req.userId });
 
-    res.json({ message: 'Journey reset successfully', journeyData: user.journeyData });
+    res.json({ message: 'Journey reset successfully', journeyData: serializeJourney(user.journeyData) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -363,6 +419,23 @@ router.get('/admin/stats', async (req, res) => {
       totalUsers, newUsersThisWeek, recentlyActive,
       dietBreakdown: { veg: vegCount, nonveg: nonvegCount },
       allUsers, newUsers, activeUsers,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/auth/admin/clear-all — wipe all users + history (owner only)
+router.delete('/admin/clear-all', async (req, res) => {
+  try {
+    const { secret } = req.query;
+    if (secret !== 'fitstart_admin_2024') return res.status(403).json({ message: 'Forbidden' });
+    const userResult    = await User.deleteMany({});
+    const historyResult = await DayHistory.deleteMany({});
+    res.json({
+      message: 'All users and history deleted.',
+      deletedUsers:   userResult.deletedCount,
+      deletedHistory: historyResult.deletedCount,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

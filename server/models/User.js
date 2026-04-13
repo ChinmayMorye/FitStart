@@ -22,9 +22,17 @@ const UserSchema = new mongoose.Schema({
 
   // Saved preferences from Diet / Workout pages
   preferences: {
-    dietType:        { type: String, default: null },   // 'veg' | 'nonveg'
-    workoutDays:     { type: Number, default: null },   // 1-6
-    workoutPlanId:   { type: String, default: null },   // 'A' | 'B'
+    dietType:         { type: String,  default: null },     // 'veg' | 'nonveg'
+    workoutDays:      { type: Number,  default: null },     // 1-6
+    workoutPlanId:    { type: String,  default: null },     // 'A' | 'B'
+    restDay:          { type: String,  default: 'Sunday' }, // e.g. 'Sunday' | 'Saturday'
+    // "Save for future" flags — only true when user explicitly checks the box
+    saveDiet:         { type: Boolean, default: false },
+    saveWorkout:      { type: Boolean, default: false },
+    // Last journey day the user completed (for Admin visibility)
+    lastCompletedDay: { type: Number,  default: null },
+    // Timestamp of last preference change
+    prefsUpdatedAt:   { type: Date,    default: null },
   },
 }, { timestamps: true });
 
