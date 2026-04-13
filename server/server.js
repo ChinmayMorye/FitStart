@@ -14,7 +14,20 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+// CORS — allow both local dev and production Vercel frontend
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.FRONTEND_URL || 'https://fitstart.vercel.app',
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (Postman, Render health checks, etc.)
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 
 // Serve uploaded profile pictures as static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
