@@ -14,17 +14,22 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// CORS — allow both local dev and production Vercel frontend
+
+// Updated CORS — Allow local dev, Vercel, and your new Render URL
 const allowedOrigins = [
   'http://localhost:3000',
-  process.env.FRONTEND_URL || 'https://fitstart.vercel.app',
+  'https://fitstart.vercel.app',
+  'https://fitstart-frontend.onrender.com' // Your Render Frontend
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (Postman, Render health checks, etc.)
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true,
 }));
@@ -33,14 +38,12 @@ app.use(cors({
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection 
-// It now looks for MONGO_URI in your .env file first
 const dbURI = process.env.MONGO_URI;
 
 mongoose.connect(dbURI)
   .then(() => console.log('MongoDB Atlas Connected ✅'))
   .catch(err => {
     console.error('MongoDB Connection Error ❌:', err.message);
-    // If it fails, check your Password or IP Whitelist in Atlas
     process.exit(1);
   });
 
