@@ -24,12 +24,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (Postman, Render health checks, etc.)
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    callback(null, true);
   },
   credentials: true,
 }));
@@ -44,7 +39,8 @@ mongoose.connect(dbURI)
   .then(() => console.log('MongoDB Atlas Connected ✅'))
   .catch(err => {
     console.error('MongoDB Connection Error ❌:', err.message);
-    process.exit(1);
+    console.log('⚠️ Falling back to Local Persistent JSON Database (server/db_fallback.json)...');
+    require('./dbFallback').enableFallback();
   });
 
 // Routes

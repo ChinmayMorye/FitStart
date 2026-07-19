@@ -1,0 +1,68 @@
+{
+  "users": [
+    {
+      "username": "knathwani636@gmail.com",
+      "password": "$2a$10$I9fbwwd2imfI8E91Zp4Asuw/b3PuT25Jni.IfE2/CJ6k2cFn6r8zu",
+      "age": 22,
+      "height": 176,
+      "weight": 55,
+      "role": "user",
+      "profilePicture": "pfp_1784452133352.png",
+      "journeyData": {
+        "totalDays": null,
+        "workoutPlace": [],
+        "completedDays": [],
+        "startDate": null,
+        "lastActiveDate": null,
+        "currentStreak": 0
+      },
+      "preferences": {
+        "dietType": null,
+        "workoutDays": null,
+        "workoutPlanId": null,
+        "restDay": "Sunday",
+        "saveDiet": false,
+        "saveWorkout": false,
+        "lastCompletedDay": null,
+        "prefsUpdatedAt": null
+      },
+      "_id": "6a5c9401cb30c5952bf36e36",
+      "createdAt": "2026-07-19T09:08:17.939Z",
+      "updatedAt": "2026-07-19T09:08:53.387Z"
+    },
+    {
+      "username": "cmorye59@gmail.com",
+      "password": "$2a$10$blh38.h1uxVWocx4bFPG.OG8Qzi4BVUheJ/V6Gtj1xDOqW17cLxmy",
+      "age": 22,
+      "height": 179,
+      "weight": 60,
+      "role": "user",
+      "profilePicture": null,
+      "journeyData": {
+        "totalDays": 90,
+        "workoutPlace": [
+          "At Gym"
+        ],
+        "completedDays": [],
+        "startDate": "2026-07-19T09:30:01.477Z",
+        "lastActiveDate": "2026-07-19T09:30:02.296Z",
+        "currentStreak": 0
+      },
+      "preferences": {
+        "dietType": null,
+        "workoutDays": 5,
+        "workoutPlanId": "A",
+        "restDay": "Sunday",
+        "saveDiet": false,
+        "saveWorkout": true,
+        "lastCompletedDay": null,
+        "prefsUpdatedAt": "2026-07-19T09:27:31.241Z"
+      },
+      "_id": "6a5c9747cb30c5952bf36e44",
+      "createdAt": "2026-07-19T09:22:15.681Z",
+      "updatedAt": "2026-07-19T09:30:02.299Z"
+    }
+  ],
+  "dayHistories": [],
+  "exercises": []
+}
