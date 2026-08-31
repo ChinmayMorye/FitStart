@@ -1,0 +1,13 @@
+/* FitStart App Base Styles */
+
+body {
+  background: #0A0A0A;
+  color: #EAEAEA;
+  margin: 0;
+  padding: 0;
+}
+
+.App {
+  min-height: 100vh;
+  background: #0A0A0A;
+}
