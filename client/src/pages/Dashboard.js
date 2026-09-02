@@ -312,6 +312,14 @@ export default function Dashboard({ userInfo, onLogout }) {
   const dropdownRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // ── Responsive breakpoint ────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 600);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 600);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   // Username change modal state
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [usernameError, setUsernameError] = useState('');
@@ -939,22 +947,23 @@ export default function Dashboard({ userInfo, onLogout }) {
       </nav>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: '1000px', margin: '0 auto', padding: '3rem 1.5rem 5rem' }}>
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '1.25rem 0.875rem 4rem' : '3rem 1.5rem 5rem' }}>
 
         {/* ── HERO HEADER ── */}
         <div className="animate-fade-in" style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '10px',
-            padding: '12px 28px', borderRadius: '100px',
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: isMobile ? '8px 14px' : '12px 28px', borderRadius: '100px',
             background: 'rgba(0,245,255,0.06)',
             border: '1.5px solid rgba(0,245,255,0.3)',
-            marginBottom: '28px',
-            fontSize: '16px', fontWeight: 800, color: '#00F5FF',
-            letterSpacing: '0.12em', textTransform: 'uppercase',
+            marginBottom: isMobile ? '16px' : '28px',
+            fontSize: isMobile ? '11px' : '16px', fontWeight: 800, color: '#00F5FF',
+            letterSpacing: isMobile ? '0.06em' : '0.12em', textTransform: 'uppercase',
             boxShadow: '0 0 30px rgba(0,245,255,0.18), inset 0 0 15px rgba(0,245,255,0.05)',
             textShadow: '0 0 12px rgba(0,245,255,0.4)',
             backdropFilter: 'blur(8px)',
             transition: 'all 0.3s ease',
+            maxWidth: isMobile ? 'calc(100vw - 2rem)' : 'none',
           }}
             onMouseEnter={e => {
               e.currentTarget.style.borderColor = 'rgba(0,245,255,0.55)';
@@ -994,7 +1003,10 @@ export default function Dashboard({ userInfo, onLogout }) {
 
             {/* ── Section Header Row: title + Edit Info button ── */}
             <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              display: 'flex', alignItems: isMobile ? 'flex-start' : 'center',
+              justifyContent: 'space-between',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '10px' : '0',
               marginBottom: '16px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1022,6 +1034,8 @@ export default function Dashboard({ userInfo, onLogout }) {
                   cursor: 'pointer', transition: 'all 0.25s',
                   letterSpacing: '0.05em',
                   boxShadow: '0 0 20px rgba(34,211,238,0.1)',
+                  width: isMobile ? '100%' : 'auto',
+                  justifyContent: isMobile ? 'center' : 'flex-start',
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34,211,238,0.28), rgba(129,140,248,0.28))';
@@ -1042,14 +1056,14 @@ export default function Dashboard({ userInfo, onLogout }) {
             {/* ── Main two-column layout: Stats (left) | Health Analysis (right) ── */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
-              gap: '16px',
+              gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.4fr) minmax(0, 1fr)',
+              gap: isMobile ? '12px' : '16px',
               alignItems: 'stretch',
             }}>
 
               {/* LEFT: stat cards in a 2x2+1 grid */}
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: isMobile ? '8px' : '12px', marginBottom: isMobile ? '8px' : '12px' }}>
                   <StatCard icon="📏" value={`${bodyStats.height} cm`} label="Height" color="#22d3ee" delay={100}
                     bgGrad="linear-gradient(135deg, rgba(34,211,238,0.08) 0%, rgba(34,211,238,0.02) 100%)" />
                   <StatCard icon="⚖️" value={`${bodyStats.weight} kg`} label="Weight" color="#10b981" delay={200}
@@ -1057,7 +1071,7 @@ export default function Dashboard({ userInfo, onLogout }) {
                   <StatCard icon="🎂" value={`${bodyStats.age} yrs`} label="Age" color="#f59e0b" delay={300}
                     bgGrad="linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.02) 100%)" />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: isMobile ? '8px' : '12px' }}>
                   <StatCard
                     icon="💡" value={bmi || '—'} label={bmiInfo?.label || 'BMI'}
                     color={bmiInfo?.color || '#6b7280'} delay={400}
