@@ -1434,3 +1434,411 @@ input:focus {
     transform: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPREHENSIVE MOBILE RESPONSIVE OVERRIDES
+   Breakpoints: 768px (tablet), 480px (large phone), 390px (iPhone),
+                360px (small Android)
+   Strategy: desktop styles untouched — all fixes via media queries only
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet (≤768px) ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Prevent any horizontal overflow at root level */
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Containers get tighter padding */
+  .container-page  { padding: 0 1rem; }
+  .container-narrow { padding: 0 1rem; }
+
+  /* Orbs / decorative blobs — scale down so they don't cause overflow */
+  .orb { max-width: 300px !important; max-height: 300px !important; }
+
+  /* ── Navbar: tighten horizontal padding ── */
+  nav[style*="padding: '0 2rem'"],
+  nav[style*="padding:\"0 2rem\""] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* ── Dashboard main content area ── */
+  .dashboard-content {
+    padding: 1.5rem 1rem 4rem !important;
+  }
+
+  /* ── Stats Grid: 3-col → 2-col on tablet ── */
+  .stats-grid-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── Health analysis panel: goes below stats ── */
+  .stats-health-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Option cards: side-by-side on tablet ── */
+  .option-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── Journey map nodes: allow wrapping ── */
+  .journey-nodes-row {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+
+  /* ── Modal: full width with margin ── */
+  .modal-card {
+    max-width: calc(100vw - 2rem) !important;
+    margin: 0 1rem !important;
+  }
+}
+
+/* ── Large Phone (≤480px) ─────────────────────────────────────── */
+@media (max-width: 480px) {
+
+  /* Global base */
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* ── Hero welcome badge: shrink text ── */
+  .welcome-badge {
+    font-size: 12px !important;
+    padding: 8px 16px !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  /* ── Hero headline: fluid size ── */
+  h1 {
+    font-size: clamp(1.8rem, 8vw, 2.8rem) !important;
+    letter-spacing: -1px !important;
+  }
+
+  h2 {
+    font-size: clamp(1.4rem, 6vw, 2rem) !important;
+  }
+
+  /* ── Navbar: tighten spacing ── */
+  nav {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+  }
+
+  /* Avatar button: slightly smaller on phone */
+  #avatar-btn {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 18px !important;
+  }
+
+  /* Dropdown: full-width on small phones */
+  #avatar-dropdown {
+    width: calc(100vw - 2rem) !important;
+    right: -0.875rem !important;
+  }
+
+  /* ── Main content padding ── */
+  [style*="padding: '3rem 1.5rem'"],
+  [style*="padding:'3rem 1.5rem'"] {
+    padding: 1.25rem 0.875rem 4rem !important;
+  }
+
+  /* ── Stats: 3-col → single row of 2, then BMI/streak as 2-col ── */
+  [style*="gridTemplateColumns: 'repeat(3, 1fr)'"],
+  [style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Stats sub-grid (BMI + streak) stays 2-col */
+  [style*="gridTemplateColumns: 'repeat(2, 1fr)'"],
+  [style*="grid-template-columns: repeat(2, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Health analysis: full width below */
+  [style*="gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)'"],
+  [style*="grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr)"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── Option cards (Diet / Workout): stack vertically ── */
+  .option-cards-grid,
+  [style*="display: 'grid'"][style*="repeat(2"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Place selection cards ── */
+  .place-card {
+    padding: 14px 10px !important;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary, .btn-ghost, .btn-success, .btn-glass {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    font-size: 13px !important;
+  }
+
+  /* ── Hero sub-paragraph ── */
+  [style*="maxWidth: '400px'"][style*="margin: '0 auto'"] {
+    font-size: 0.9rem !important;
+    padding: 0 0.5rem !important;
+  }
+
+  /* ── Section header row (My Body Stats title + Edit Info button) ── */
+  [style*="justifyContent: 'space-between'"][style*="marginBottom: '16px'"] {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+
+  /* Edit Info button — full width when wrapped */
+  #edit-body-info-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* ── Journey setup modal steps ── */
+  .journey-place-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Number display input: smaller font ── */
+  .input-number-display {
+    font-size: 2.5rem !important;
+  }
+
+  /* ── Modals: full width ── */
+  .modal-card {
+    border-radius: 16px !important;
+    margin: 0.5rem !important;
+    max-width: calc(100vw - 1rem) !important;
+  }
+
+  /* ── Login/Signup page: form padding ── */
+  [style*="padding: '32px'"],
+  [style*="padding:'32px'"] {
+    padding: 20px 16px !important;
+  }
+
+  /* ── Stat cards: compact ── */
+  .stat-card-inner {
+    padding: 12px 10px !important;
+  }
+
+  /* ── Feature pills: wrap ── */
+  [style*="flexWrap: 'wrap'"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* ── Stats row in Login left panel (hidden on mobile anyway) ── */
+  [style*="display: 'flex'"][style*="gap: '12px'"] {
+    gap: 8px !important;
+  }
+}
+
+/* ── Small Android (≤390px) ──────────────────────────────────── */
+@media (max-width: 390px) {
+
+  /* Even tighter base font */
+  html { font-size: 14px; }
+
+  /* Navbar logo text: smaller */
+  nav span[style*="fontSize: '1.4rem'"],
+  nav span[style*="font-size: 1.4rem"] {
+    font-size: 1.1rem !important;
+  }
+
+  /* Stats grid: 2 col, very compact */
+  [style*="gridTemplateColumns: 'repeat(3, 1fr)'"],
+  [style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  /* Option card tags: wrap and reduce size */
+  [style*="display: 'flex'"][style*="flexWrap: 'wrap'"][style*="gap: '8px'"],
+  [style*="gap: '8px'"][style*="flexWrap: 'wrap'"] {
+    gap: 6px !important;
+  }
+
+  /* Welcome badge */
+  [style*="fontSize: '16px'"][style*="letterSpacing: '0.12em'"] {
+    font-size: 11px !important;
+    padding: 8px 12px !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  /* Dropdown: account for narrow screen */
+  #avatar-dropdown {
+    width: calc(100vw - 1.75rem) !important;
+    right: -0.875rem !important;
+  }
+}
+
+/* ── Very small (≤360px) ─────────────────────────────────────── */
+@media (max-width: 360px) {
+
+  html { font-size: 13px; }
+
+  h1 {
+    font-size: clamp(1.6rem, 9vw, 2.4rem) !important;
+    letter-spacing: -0.5px !important;
+  }
+
+  /* Stack stat cards to single column */
+  [style*="gridTemplateColumns: 'repeat(3, 1fr)'"],
+  [style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Form padding minimal */
+  [style*="padding: '32px'"],
+  [style*="padding:'32px'"] {
+    padding: 16px 12px !important;
+  }
+
+  /* Buttons: full width */
+  .btn-primary, .btn-success {
+    width: 100% !important;
+  }
+}
+
+/* ── Login page: fix the two-panel layout on mobile ── */
+@media (max-width: 1023px) {
+  /* Hide left branding panel — already uses lg:flex so it's hidden,
+     but ensure no bleeding layout */
+  .login-left-panel {
+    display: none !important;
+  }
+
+  /* Right panel takes full width */
+  .login-right-panel {
+    width: 100% !important;
+    padding: 1.5rem 1rem !important;
+  }
+}
+
+/* ── Prevent overflow from absolute-positioned decorative orbs ── */
+@media (max-width: 768px) {
+  /* Clip all decorative blobs that extend beyond viewport */
+  .page-bg,
+  [style*="overflow-x: 'hidden'"],
+  [style*="overflowX: 'hidden'"] {
+    overflow-x: hidden !important;
+  }
+
+  /* Scale down large fixed-size orbs */
+  [style*="width: '500px'"],
+  [style*="width: '600px'"],
+  [style*="width: '700px'"],
+  [style*="width:'500px'"],
+  [style*="width:'600px'"],
+  [style*="width:'700px'"] {
+    width: min(300px, 80vw) !important;
+    height: min(300px, 80vw) !important;
+  }
+}
+
+/* ── Touch target improvements (all interactive elements ≥44px) ── */
+@media (max-width: 768px) {
+  button, a, [role="button"] {
+    min-height: 36px;
+  }
+
+  /* Profile avatar: always at least 40px */
+  #avatar-btn {
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+}
+
+/* ── Signup page specific ── */
+@media (max-width: 480px) {
+  /* Signup multi-step form: reduce step number size */
+  [style*="fontSize: '3.5rem'"] {
+    font-size: 2.5rem !important;
+  }
+
+  /* Step dots container: more compact */
+  .step-dots {
+    gap: 6px !important;
+  }
+
+  /* Place selection grid on signup: 2 columns */
+  [style*="gridTemplateColumns: 'repeat(2, 1fr)'"][style*="gap: '12px'"] {
+    gap: 8px !important;
+  }
+}
+
+/* ── AdminPage: table scrolls horizontally on mobile ── */
+@media (max-width: 768px) {
+  .admin-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 600px;
+  }
+}
+
+/* ── StreakPage / Journey Map: nodes wrap ── */
+@media (max-width: 640px) {
+  /* Journey node containers */
+  [style*="display: 'flex'"][style*="gap: '16px'"][style*="flexWrap"] {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+
+  /* Individual node: slightly smaller */
+  [style*="width: '80px'"],
+  [style*="width:'80px'"] {
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* ── DietPage / WorkoutPage: plan cards stack ── */
+@media (max-width: 640px) {
+  /* Meal plan tables: horizontal scroll */
+  [style*="overflow: 'auto'"],
+  [style*="overflowX: 'auto'"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Plan selection buttons: full width */
+  [style*="display: 'grid'"][style*="repeat(3"] {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}
+
+/* ── WorkoutPage: exercise cards ── */
+@media (max-width: 640px) {
+  [style*="gridTemplateColumns: 'repeat(auto-fill"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Fix: inputs don't zoom on iOS (font-size ≥ 16px) ── */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="email"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
