@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -15,13 +14,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Updated CORS — Allow local dev, Vercel, and your new Render URL
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://fitstart.vercel.app',
-  'https://fitstart-frontend.onrender.com' // Your Render Frontend
-];
-
+// CORS
 app.use(cors({
   origin: function (origin, callback) {
     callback(null, true);
@@ -31,17 +24,6 @@ app.use(cors({
 
 // Serve uploaded profile pictures as static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// MongoDB Connection 
-const dbURI = process.env.MONGO_URI;
-
-mongoose.connect(dbURI)
-  .then(() => console.log('MongoDB Atlas Connected ✅'))
-  .catch(err => {
-    console.error('MongoDB Connection Error ❌:', err.message);
-    console.log('⚠️ Falling back to Local Persistent JSON Database (server/db_fallback.json)...');
-    require('./dbFallback').enableFallback();
-  });
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
@@ -54,7 +36,7 @@ app.use('/api/upload', uploadRoutes);
 
 // Test route
 app.get('/', (req, res) => {
-  res.json({ message: 'FitStart Backend Running 💪', version: '1.0.0' });
+  res.json({ message: 'FitStart Backend Running 💪 (Supabase)', version: '2.0.0' });
 });
 
 // Health check
@@ -76,6 +58,7 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Connected to Supabase: ${process.env.SUPABASE_URL}`);
 });
 
 module.exports = app;

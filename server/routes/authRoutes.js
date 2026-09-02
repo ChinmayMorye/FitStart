@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-const DayHistory = require('../models/DayHistory');
+const supabase = require('../config/supabase');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
@@ -19,8 +18,7 @@ function verifyToken(req, res, next) {
   }
 }
 
-// ── Streak recalculator (pure function, no DB side effects) ────────────────
-// Counts the longest consecutive run of days from Day 1.
+// ── Streak recalculator ─────────────────────────────────────────────────────
 function calcStreak(sortedDays) {
   let streak = 0;
   for (let i = 1; i <= (sortedDays[sortedDays.length - 1] || 0); i++) {
@@ -30,17 +28,33 @@ function calcStreak(sortedDays) {
   return streak;
 }
 
-// ── Derive currentDay from completedDays (never store it — it's always fresh) ─
-// currentDay = next day to complete = completedDays.length + 1 (min 1)
-function deriveCurrentDay(journeyData) {
-  return (journeyData.completedDays || []).length + 1;
+function deriveCurrentDay(completedDays) {
+  return (completedDays || []).length + 1;
 }
 
-// ── Serialise journeyData + inject currentDay ────────────────────────────────
-function serializeJourney(journeyData) {
-  const obj = typeof journeyData.toObject === 'function' ? journeyData.toObject() : { ...journeyData };
-  obj.currentDay = deriveCurrentDay(obj);
-  return obj;
+function serializeJourney(user) {
+  return {
+    totalDays:      user.journey_total_days,
+    workoutPlace:   user.journey_workout_place,
+    completedDays:  user.journey_completed_days,
+    startDate:      user.journey_start_date,
+    lastActiveDate: user.journey_last_active,
+    currentStreak:  user.journey_streak,
+    currentDay:     deriveCurrentDay(user.journey_completed_days),
+  };
+}
+
+function serializePreferences(user) {
+  return {
+    dietType:         user.diet_plan,
+    workoutDays:      user.workout_days,
+    workoutPlanId:    user.workout_plan,
+    restDay:          user.rest_day,
+    saveDiet:         user.save_diet,
+    saveWorkout:      user.save_workout,
+    lastCompletedDay: user.last_completed_day,
+    prefsUpdatedAt:   user.pref_updated_at,
+  };
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -50,8 +64,31 @@ function serializeJourney(journeyData) {
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const newUser = new User(req.body);
-    await newUser.save();
+    const { username, password, age, height, weight } = req.body;
+    if (!username || !password || !age || !height || !weight) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // Check if username already taken
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+    if (existing) return res.status(400).json({ error: 'Username already taken' });
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const { data, error } = await supabase
+      .from('users')
+      .insert([{ username, password: hashedPassword, age, height, weight }])
+      .select()
+      .single();
+
+    if (error) throw error;
     res.status(201).json({ message: 'User Created' });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -59,21 +96,21 @@ router.post('/register', async (req, res) => {
 });
 
 // POST /api/auth/login
-// Returns full user data so client can restore its state without extra fetches.
-// Plans are STICKY — they never reset here. Only change via /preferences route.
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await User.findOne({ username });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .single();
+
+    if (error || !user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: 'Invalid Credentials' });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    // Return FULL profile so the client can rehydrate everything from one call.
-    // journeyData.completedDays is the ground truth — the client never needs to
-    // re-select plans if preferences.dietType / workoutDays / workoutPlanId exist.
     res.json({
       token,
       user: {
@@ -81,9 +118,9 @@ router.post('/login', async (req, res) => {
         weight:         user.weight,
         height:         user.height,
         age:            user.age,
-        profilePicture: user.profilePicture,
-        journeyData:    user.journeyData,   // completedDays, streak, startDate, totalDays, workoutPlace
-        preferences:    user.preferences,  // dietType, workoutDays, workoutPlanId  ← STICKY
+        profilePicture: user.profile_picture,
+        journeyData:    serializeJourney(user),
+        preferences:    serializePreferences(user),
       },
     });
   } catch (err) {
@@ -91,13 +128,25 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// GET /api/auth/profile — full profile including journey + preferences
-// Used on app boot to get fresh data after a cached login.
+// GET /api/auth/profile
 router.get('/profile', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ user });
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', req.userId)
+      .single();
+
+    if (error || !user) return res.status(404).json({ message: 'User not found' });
+
+    const { password: _, ...safeUser } = user;
+    res.json({
+      user: {
+        ...safeUser,
+        journeyData: serializeJourney(user),
+        preferences: serializePreferences(user),
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -107,36 +156,44 @@ router.get('/profile', verifyToken, async (req, res) => {
 // JOURNEY ROUTES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// PATCH /api/auth/journey — bulk-update journey progress (used for reset / init)
+// PATCH /api/auth/journey
 router.patch('/journey', verifyToken, async (req, res) => {
   try {
     const { totalDays, workoutPlace, completedDays, currentStreak, startDate } = req.body;
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Accept an explicit startDate from the client (sent on journey creation).
-    // Fall back to setting it now if it still isn't set and totalDays is provided.
-    if (startDate && !user.journeyData.startDate) {
-      user.journeyData.startDate = new Date(startDate);
-    } else if (!user.journeyData.startDate && totalDays) {
-      user.journeyData.startDate = new Date();
-    }
-    if (totalDays      !== undefined) user.journeyData.totalDays     = totalDays;
-    if (workoutPlace   !== undefined) user.journeyData.workoutPlace  = workoutPlace;
-    if (completedDays  !== undefined) user.journeyData.completedDays = completedDays;
-    if (currentStreak  !== undefined) user.journeyData.currentStreak = currentStreak;
-    user.journeyData.lastActiveDate = new Date();
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', req.userId)
+      .single();
 
-    await user.save();
-    res.json({ message: 'Journey updated', journeyData: serializeJourney(user.journeyData) });
+    if (fetchError || !user) return res.status(404).json({ message: 'User not found' });
+
+    const updates = { journey_last_active: new Date().toISOString(), updated_at: new Date().toISOString() };
+
+    if (startDate && !user.journey_start_date) updates.journey_start_date = new Date(startDate).toISOString();
+    else if (!user.journey_start_date && totalDays) updates.journey_start_date = new Date().toISOString();
+
+    if (totalDays     !== undefined) updates.journey_total_days    = totalDays;
+    if (workoutPlace  !== undefined) updates.journey_workout_place = workoutPlace;
+    if (completedDays !== undefined) updates.journey_completed_days = completedDays;
+    if (currentStreak !== undefined) updates.journey_streak        = currentStreak;
+
+    const { data: updated, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', req.userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ message: 'Journey updated', journeyData: serializeJourney(updated) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// PATCH /api/auth/journey-length — DYNAMIC NODE COUNT CHANGE
-// Updates totalDays in DB; trims completedDays if they exceed the new length.
-// The Journey Map re-renders on the client once it receives the updated totalDays.
+// PATCH /api/auth/journey-length
 router.patch('/journey-length', verifyToken, async (req, res) => {
   try {
     const { totalDays } = req.body;
@@ -144,41 +201,46 @@ router.patch('/journey-length', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'totalDays must be a number between 1 and 365' });
     }
 
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', req.userId)
+      .single();
 
-    const prevTotal = user.journeyData.totalDays;
-    user.journeyData.totalDays = totalDays;
+    if (fetchError || !user) return res.status(404).json({ message: 'User not found' });
 
-    // If the user shortened their journey, trim any completedDays that are now out of range
-    if (totalDays < prevTotal) {
-      user.journeyData.completedDays = user.journeyData.completedDays.filter(d => d <= totalDays);
-      // Also delete history entries beyond the new limit
-      await DayHistory.deleteMany({ userId: req.userId, dayNumber: { $gt: totalDays } });
+    let completedDays = user.journey_completed_days || [];
+    if (totalDays < user.journey_total_days) {
+      completedDays = completedDays.filter(d => d <= totalDays);
+      // Delete history beyond new limit
+      await supabase.from('day_histories').delete()
+        .eq('user_id', req.userId)
+        .gt('day_number', totalDays);
     }
 
-    // Recalculate streak after trim
-    const days = user.journeyData.completedDays.sort((a, b) => a - b);
-    user.journeyData.currentStreak = calcStreak(days);
-    user.journeyData.lastActiveDate = new Date();
+    const streak = calcStreak([...completedDays].sort((a, b) => a - b));
 
-    await user.save();
+    const { data: updated, error } = await supabase
+      .from('users')
+      .update({
+        journey_total_days:    totalDays,
+        journey_completed_days: completedDays,
+        journey_streak:        streak,
+        journey_last_active:   new Date().toISOString(),
+        updated_at:            new Date().toISOString(),
+      })
+      .eq('id', req.userId)
+      .select()
+      .single();
 
-    res.json({
-      message: 'Journey length updated',
-      journeyData: serializeJourney(user.journeyData),
-    });
+    if (error) throw error;
+    res.json({ message: 'Journey length updated', journeyData: serializeJourney(updated) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/auth/complete-day — ATOMIC DAY COMPLETION
-// This is the core progress endpoint. It:
-//   1. Adds dayNumber to completedDays (idempotent)
-//   2. Recalculates streak from consecutive run starting at Day 1
-//   3. Writes an immutable DayHistory document (upsert — safe to retry)
-//   4. Returns the authoritative journeyData so the client can sync
+// POST /api/auth/complete-day
 router.post('/complete-day', verifyToken, async (req, res) => {
   try {
     const {
@@ -194,71 +256,71 @@ router.post('/complete-day', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'dayNumber (number) is required' });
     }
 
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', req.userId)
+      .single();
 
-    // ── Set startDate on very first completion ──────────────────────────────
-    // Back-calculate so that Day 1 maps to (today - (dayNumber - 1) days).
-    // This keeps the calendar-date ↔ journey-day mapping correct for
-    // all future diet/workout lookups regardless of which day they complete first.
-    if (!user.journeyData.startDate) {
+    if (fetchError || !user) return res.status(404).json({ message: 'User not found' });
+
+    const updates = { journey_last_active: new Date().toISOString(), updated_at: new Date().toISOString() };
+
+    // Set startDate on first completion
+    if (!user.journey_start_date) {
       const start = new Date();
       start.setDate(start.getDate() - (dayNumber - 1));
       start.setHours(0, 0, 0, 0);
-      user.journeyData.startDate = start;
+      updates.journey_start_date = start.toISOString();
     }
 
-    // Sync totalDays and workoutPlace only if not already set
-    if (totalDays    !== undefined && !user.journeyData.totalDays)           user.journeyData.totalDays    = totalDays;
-    if (workoutPlace !== undefined && !user.journeyData.workoutPlace?.length) user.journeyData.workoutPlace = workoutPlace;
+    if (totalDays    !== undefined && !user.journey_total_days)          updates.journey_total_days    = totalDays;
+    if (workoutPlace !== undefined && !user.journey_workout_place?.length) updates.journey_workout_place = workoutPlace;
 
-    // ── Idempotent insert ───────────────────────────────────────────────────
-    if (!user.journeyData.completedDays.includes(dayNumber)) {
-      user.journeyData.completedDays.push(dayNumber);
-    }
-    user.journeyData.completedDays.sort((a, b) => a - b);
+    // Idempotent insert
+    let completedDays = user.journey_completed_days || [];
+    if (!completedDays.includes(dayNumber)) completedDays.push(dayNumber);
+    completedDays.sort((a, b) => a - b);
 
-    // ── Recalculate streak ──────────────────────────────────────────────────
-    user.journeyData.currentStreak = calcStreak(user.journeyData.completedDays);
-    user.journeyData.lastActiveDate = new Date();
+    updates.journey_completed_days = completedDays;
+    updates.journey_streak = calcStreak(completedDays);
 
-    // ── Save user ───────────────────────────────────────────────────────────
-    await user.save();
+    const { data: updated, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', req.userId)
+      .select()
+      .single();
 
-    // ── Write immutable DayHistory entry (upsert) ───────────────────────────
-    // Using findOneAndUpdate + upsert so retrying the same day is safe.
-    await DayHistory.findOneAndUpdate(
-      { userId: req.userId, dayNumber },
-      {
-        $set: {
-          completedAt:        new Date(),
-          dietStatus,
-          workoutStatus,
-          musclesWorked,
-          totalDaysInJourney: user.journeyData.totalDays,
-        },
-        $setOnInsert: { userId: req.userId, dayNumber },
-      },
-      { upsert: true, new: true }
-    );
+    if (error) throw error;
 
-    res.json({
-      message:     'Day completed',
-      journeyData: serializeJourney(user.journeyData),
-    });
+    // Upsert DayHistory
+    await supabase.from('day_histories').upsert({
+      user_id:              req.userId,
+      day_number:           dayNumber,
+      completed_at:         new Date().toISOString(),
+      diet_status:          dietStatus,
+      workout_status:       workoutStatus,
+      muscles_worked:       musclesWorked,
+      total_days_in_journey: updated.journey_total_days,
+    }, { onConflict: 'user_id,day_number' });
+
+    res.json({ message: 'Day completed', journeyData: serializeJourney(updated) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET /api/auth/history — per-user DayHistory (for timeline / analytics)
-// Returns sorted history so client can display "Day 3 completed on April 8" etc.
+// GET /api/auth/history
 router.get('/history', verifyToken, async (req, res) => {
   try {
-    const history = await DayHistory
-      .find({ userId: req.userId })
-      .sort({ dayNumber: 1 })
-      .select('-__v');
+    const { data: history, error } = await supabase
+      .from('day_histories')
+      .select('*')
+      .eq('user_id', req.userId)
+      .order('day_number', { ascending: true });
+
+    if (error) throw error;
     res.json({ history });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -266,50 +328,48 @@ router.get('/history', verifyToken, async (req, res) => {
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// PLAN & PREFERENCES ROUTES  (STICKY — never resets on login)
+// PREFERENCES ROUTES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// PATCH /api/auth/preferences — save diet/workout plan choice OR change username
-// This is the ONLY place selections can change. Login never touches preferences.
+// PATCH /api/auth/preferences
 router.patch('/preferences', verifyToken, async (req, res) => {
   try {
     const { dietType, workoutDays, workoutPlanId, username, restDay,
             saveDiet, saveWorkout, lastCompletedDay } = req.body;
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Accept null / empty-string as "clear this preference"
-    // This makes "Change Plan" reliably wipe the saved selection.
-    if (dietType      !== undefined) user.preferences.dietType      = dietType      || null;
-    if (workoutDays   !== undefined) user.preferences.workoutDays   = workoutDays   || null;
-    if (workoutPlanId !== undefined) user.preferences.workoutPlanId = workoutPlanId || null;
+    const updates = { pref_updated_at: new Date().toISOString(), updated_at: new Date().toISOString() };
 
-    // restDay: persist the user's chosen rest day (e.g. 'Sunday', 'Saturday')
-    // Falls back to 'Sunday' if cleared. Never stored as null.
-    if (restDay !== undefined && restDay) user.preferences.restDay = restDay;
+    if (dietType      !== undefined) updates.diet_plan    = dietType      || null;
+    if (workoutDays   !== undefined) updates.workout_days = workoutDays   || null;
+    if (workoutPlanId !== undefined) updates.workout_plan = workoutPlanId || null;
+    if (restDay       !== undefined && restDay) updates.rest_day = restDay;
+    if (saveDiet      !== undefined) updates.save_diet    = !!saveDiet;
+    if (saveWorkout   !== undefined) updates.save_workout = !!saveWorkout;
+    if (lastCompletedDay !== undefined) updates.last_completed_day = lastCompletedDay;
 
-    // "Save for future" checkbox flags — only update if explicitly sent
-    if (saveDiet    !== undefined) user.preferences.saveDiet    = !!saveDiet;
-    if (saveWorkout !== undefined) user.preferences.saveWorkout = !!saveWorkout;
-
-    // lastCompletedDay — updated after each day completion from StreakPage
-    if (lastCompletedDay !== undefined) user.preferences.lastCompletedDay = lastCompletedDay;
-
-    // Always stamp the time of last preference change
-    user.preferences.prefsUpdatedAt = new Date();
-
-    // Allow username change through this route
     if (username !== undefined && username.trim().length >= 2) {
-      const taken = await User.findOne({ username: username.trim(), _id: { $ne: user._id } });
+      const { data: taken } = await supabase
+        .from('users')
+        .select('id')
+        .eq('username', username.trim())
+        .neq('id', req.userId)
+        .single();
       if (taken) return res.status(409).json({ message: 'Username already taken' });
-      user.username = username.trim();
+      updates.username = username.trim();
     }
 
-    await user.save();
+    const { data: updated, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', req.userId)
+      .select()
+      .single();
+
+    if (error) throw error;
     res.json({
       message:     'Preferences saved',
-      preferences: user.preferences,
-      username:    user.username,
+      preferences: serializePreferences(updated),
+      username:    updated.username,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -320,123 +380,146 @@ router.patch('/preferences', verifyToken, async (req, res) => {
 // UPDATE BODY STATS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// PATCH /api/auth/update-body-stats — update height, weight, age
+// PATCH /api/auth/update-body-stats
 router.patch('/update-body-stats', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
     const { height, weight, age } = req.body;
+    const updates = { updated_at: new Date().toISOString() };
 
-    if (height !== undefined && height > 0 && height <= 300) user.height = Number(height);
-    if (weight !== undefined && weight > 0 && weight <= 500) user.weight = Number(weight);
-    if (age    !== undefined && age    > 0 && age    <= 120)  user.age    = Number(age);
+    if (height !== undefined && height > 0 && height <= 300) updates.height = Number(height);
+    if (weight !== undefined && weight > 0 && weight <= 500) updates.weight = Number(weight);
+    if (age    !== undefined && age    > 0 && age    <= 120)  updates.age    = Number(age);
 
-    await user.save();
-    res.json({
-      message: 'Body stats updated',
-      height: user.height,
-      weight: user.weight,
-      age:    user.age,
-    });
+    const { data: updated, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', req.userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ message: 'Body stats updated', height: updated.height, weight: updated.weight, age: updated.age });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// JOURNEY RESET ROUTES
+// RESET ROUTES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// PATCH /api/auth/reset-journey — user resets their OWN journey to zero
-// Does NOT clear preferences (diet/workout plan stays sticky).
+// PATCH /api/auth/reset-journey
 router.patch('/reset-journey', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('journey_total_days, journey_workout_place')
+      .eq('id', req.userId)
+      .single();
 
-    // Reset progress but keep totalDays / workoutPlace so journey structure is preserved
-    const prevTotal    = user.journeyData.totalDays;
-    const prevWorkout  = user.journeyData.workoutPlace;
-    user.journeyData = {
-      totalDays:      prevTotal,
-      workoutPlace:   prevWorkout,
-      completedDays:  [],
-      startDate:      null,
-      lastActiveDate: null,
-      currentStreak:  0,
-    };
-    await user.save();
+    if (fetchError || !user) return res.status(404).json({ message: 'User not found' });
 
-    // Also wipe DayHistory for this user
-    await DayHistory.deleteMany({ userId: req.userId });
+    const { data: updated, error } = await supabase
+      .from('users')
+      .update({
+        journey_completed_days: [],
+        journey_start_date:     null,
+        journey_last_active:    null,
+        journey_streak:         0,
+        updated_at:             new Date().toISOString(),
+      })
+      .eq('id', req.userId)
+      .select()
+      .single();
 
-    res.json({ message: 'Journey reset successfully', journeyData: serializeJourney(user.journeyData) });
+    if (error) throw error;
+
+    // Delete all history for this user
+    await supabase.from('day_histories').delete().eq('user_id', req.userId);
+
+    res.json({ message: 'Journey reset successfully', journeyData: serializeJourney(updated) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/auth/admin-reset — dev tool: reset any user by username + secret
+// POST /api/auth/admin-reset
 router.post('/admin-reset', async (req, res) => {
   try {
     const { username, secret } = req.body;
     if (secret !== 'fitstart_admin_2024') return res.status(403).json({ message: 'Forbidden' });
-    const user = await User.findOne({ username });
-    if (!user) return res.status(404).json({ message: `User '${username}' not found` });
-    user.journeyData = {
-      totalDays: null, workoutPlace: [], completedDays: [],
-      startDate: null, lastActiveDate: null, currentStreak: 0,
-    };
-    await user.save();
-    await DayHistory.deleteMany({ userId: user._id });
-    res.json({ message: `Journey reset for ${username}`, journeyData: user.journeyData });
+
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+    if (fetchError || !user) return res.status(404).json({ message: `User '${username}' not found` });
+
+    const { data: updated, error } = await supabase
+      .from('users')
+      .update({
+        journey_total_days:     null,
+        journey_workout_place:  [],
+        journey_completed_days: [],
+        journey_start_date:     null,
+        journey_last_active:    null,
+        journey_streak:         0,
+        updated_at:             new Date().toISOString(),
+      })
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    await supabase.from('day_histories').delete().eq('user_id', user.id);
+
+    res.json({ message: `Journey reset for ${username}`, journeyData: serializeJourney(updated) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET /api/auth/admin/stats — owner-only stats dashboard
+// GET /api/auth/admin/stats
 router.get('/admin/stats', async (req, res) => {
   try {
     const { secret } = req.query;
     if (secret !== 'fitstart_admin_2024') return res.status(403).json({ message: 'Forbidden' });
 
-    const totalUsers      = await User.countDocuments();
-    const sevenDaysAgo    = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const newUsersThisWeek = await User.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
-    const recentlyActive   = await User.countDocuments({ 'journeyData.lastActiveDate': { $gte: sevenDaysAgo } });
-    const vegCount         = await User.countDocuments({ 'preferences.dietType': 'veg' });
-    const nonvegCount      = await User.countDocuments({ 'preferences.dietType': 'nonveg' });
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // All users — include password hash so admin can see it
-    const allUsers    = await User.find().sort({ createdAt: -1 }).lean();
-    const newUsers    = await User.find({ createdAt: { $gte: sevenDaysAgo } }).sort({ createdAt: -1 }).lean();
-    const activeUsers = await User.find({ 'journeyData.lastActiveDate': { $gte: sevenDaysAgo } })
-      .sort({ 'journeyData.lastActiveDate': -1 }).lean();
+    const { data: allUsers }    = await supabase.from('users').select('*').order('created_at', { ascending: false });
+    const { count: totalUsers } = await supabase.from('users').select('*', { count: 'exact', head: true });
+    const { data: newUsers }    = await supabase.from('users').select('*').gte('created_at', sevenDaysAgo).order('created_at', { ascending: false });
+    const { data: activeUsers } = await supabase.from('users').select('*').gte('journey_last_active', sevenDaysAgo).order('journey_last_active', { ascending: false });
+    const { data: vegUsers }    = await supabase.from('users').select('id').eq('diet_plan', 'veg');
+    const { data: nonvegUsers } = await supabase.from('users').select('id').eq('diet_plan', 'nonveg');
 
     res.json({
-      totalUsers, newUsersThisWeek, recentlyActive,
-      dietBreakdown: { veg: vegCount, nonveg: nonvegCount },
-      allUsers, newUsers, activeUsers,
+      totalUsers,
+      newUsersThisWeek: newUsers?.length || 0,
+      recentlyActive:   activeUsers?.length || 0,
+      dietBreakdown: { veg: vegUsers?.length || 0, nonveg: nonvegUsers?.length || 0 },
+      allUsers,
+      newUsers,
+      activeUsers,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// DELETE /api/auth/admin/clear-all — wipe all users + history (owner only)
+// DELETE /api/auth/admin/clear-all
 router.delete('/admin/clear-all', async (req, res) => {
   try {
     const { secret } = req.query;
     if (secret !== 'fitstart_admin_2024') return res.status(403).json({ message: 'Forbidden' });
-    const userResult    = await User.deleteMany({});
-    const historyResult = await DayHistory.deleteMany({});
-    res.json({
-      message: 'All users and history deleted.',
-      deletedUsers:   userResult.deletedCount,
-      deletedHistory: historyResult.deletedCount,
-    });
+
+    const { data: historyResult } = await supabase.from('day_histories').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    const { data: userResult }    = await supabase.from('users').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+    res.json({ message: 'All users and history deleted.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

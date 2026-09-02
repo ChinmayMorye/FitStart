@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const supabase = require('../config/supabase');
 
 // Configure multer storage
 const storage = multer.diskStorage({
@@ -42,16 +42,19 @@ function verifyToken(req, res, next) {
   }
 }
 
-// POST /api/upload/pfp — upload or replace profile picture
+// POST /api/upload/pfp
 router.post('/pfp', verifyToken, upload.single('profilePicture'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const { data, error } = await supabase
+      .from('users')
+      .update({ profile_picture: req.file.filename, updated_at: new Date().toISOString() })
+      .eq('id', req.userId)
+      .select('id')
+      .single();
 
-    user.profilePicture = req.file.filename;
-    await user.save();
+    if (error || !data) return res.status(404).json({ message: 'User not found' });
 
     res.json({
       message: 'Profile picture updated',
@@ -63,15 +66,21 @@ router.post('/pfp', verifyToken, upload.single('profilePicture'), async (req, re
   }
 });
 
-// GET /api/upload/pfp — get current user's profile picture filename
+// GET /api/upload/pfp
 router.get('/pfp', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('profilePicture username');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('username, profile_picture')
+      .eq('id', req.userId)
+      .single();
+
+    if (error || !user) return res.status(404).json({ message: 'User not found' });
+
     res.json({
       username: user.username,
-      profilePicture: user.profilePicture,
-      profilePictureUrl: user.profilePicture ? `/uploads/${user.profilePicture}` : null
+      profilePicture: user.profile_picture,
+      profilePictureUrl: user.profile_picture ? `/uploads/${user.profile_picture}` : null
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
