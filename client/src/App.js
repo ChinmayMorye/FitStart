@@ -792,21 +792,23 @@ function AppRoutes() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
 
-  // On mount: check for saved session, then refresh from DB
+  // On mount: check for saved session, then refresh from DB.
+  // The splash timer and the data fetch are DECOUPLED:
+  // - Splash hides after 1200ms (UX polish).
+  // - DB fetch starts IMMEDIATELY so fresh data arrives as fast as possible.
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      const storedUser = localStorage.getItem('fitstart_user');
-      const token = localStorage.getItem('fitstart_token');
-      if (token && storedUser) {
-        try {
-          const parsed = JSON.parse(storedUser);
-          setIsLoggedIn(true);
-          setUserInfo(parsed); // set immediately from local
-          syncFromProfile(parsed.journeyData);
+    // Start data fetch right away — don't wait for splash
+    const storedUser = localStorage.getItem('fitstart_user');
+    const token      = localStorage.getItem('fitstart_token');
+    if (token && storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        setIsLoggedIn(true);
+        setUserInfo(parsed); // immediately from cache
+        syncFromProfile(parsed.journeyData);
 
-          // Refresh from DB in background to get latest journeyData/preferences.
-          // IMPORTANT: also sync all 4 localStorage preference keys so that
-          // DietPage, WorkoutPage, and StreakPage read the correct plan on reload.
+        // Fetch fresh data from DB in background
+        (async () => {
           try {
             const res = await fetch(`${API_BASE}/api/auth/profile`, {
               headers: { Authorization: `Bearer ${token}` },
@@ -816,12 +818,10 @@ function AppRoutes() {
               const dbUser = data.user || {};
               const freshUser = {
                 ...parsed,
-                // Always take these from DB (ground truth)
                 journeyData:    dbUser.journeyData,
                 preferences:    dbUser.preferences,
                 username:       dbUser.username       ?? parsed.username,
                 profilePicture: dbUser.profilePicture ?? parsed.profilePicture,
-                // Body stats — always restore from DB so Edit Info changes persist
                 height:         dbUser.height         ?? parsed.height,
                 weight:         dbUser.weight         ?? parsed.weight,
                 age:            dbUser.age            ?? parsed.age,
@@ -830,7 +830,7 @@ function AppRoutes() {
               localStorage.setItem('fitstart_user', JSON.stringify(freshUser));
               syncFromProfile(dbUser.journeyData);
 
-              // Keep individual preference keys in sync with DB truth
+              // Sync individual preference keys
               const prefs = dbUser.preferences || {};
               if (prefs.dietType)      localStorage.setItem('fitstart_diet_type',    prefs.dietType);
               else                     localStorage.removeItem('fitstart_diet_type');
@@ -838,9 +838,8 @@ function AppRoutes() {
               else                     localStorage.removeItem('fitstart_workout_days');
               if (prefs.workoutPlanId) localStorage.setItem('fitstart_workout_plan', prefs.workoutPlanId);
               else                     localStorage.removeItem('fitstart_workout_plan');
-              // restDay — always has a value; default 'Sunday' if missing
               localStorage.setItem('fitstart_rest_day', prefs.restDay || 'Sunday');
-              // "Both" diet day allocation — restore from server so DietPage skips re-setup
+              // "Both" diet day allocation
               if (prefs.dietType === 'both') {
                 if (prefs.bothVegDays?.length)    localStorage.setItem('fitstart_both_veg_days',    JSON.stringify(prefs.bothVegDays));
                 if (prefs.bothNonVegDays?.length) localStorage.setItem('fitstart_both_nonveg_days', JSON.stringify(prefs.bothNonVegDays));
@@ -850,9 +849,7 @@ function AppRoutes() {
               }
               if (dbUser.journeyData?.totalDays)
                 localStorage.setItem('fitstart_streak', JSON.stringify(dbUser.journeyData));
-              // ── Restore per-day done flags → DietPage & WorkoutPage show ✓ DONE ────
               restoreCompletedDayFlags(dbUser.journeyData, dbUser.preferences);
-              // ── Restore individual checkbox states from server ────────────────────
               restoreDailyChecks(dbUser.preferences);
             }
           } catch (_) {}

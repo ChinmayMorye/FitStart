@@ -565,6 +565,31 @@ export default function WorkoutPage({ userInfo }) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Re-check plan when fresh userInfo arrives from /profile DB fetch ─────────
+  // The mount effect above fires once immediately (reads stale localStorage cache).
+  // This effect fires again once App.js sets the freshly-fetched userInfo from
+  // the server — ensuring the plan is restored even if the cache was empty/stale.
+  useEffect(() => {
+    if (!userInfo?.preferences) return;
+    const prefs = userInfo.preferences;
+
+    // Restore restDay from server
+    if (prefs.restDay) {
+      const idx = DAY_INDEX[prefs.restDay] ?? 6;
+      setRestDay(prefs.restDay);
+      setRestDayIdx(idx);
+    }
+
+    // Restore plan if server says we have one
+    const d = prefs.workoutDays   || null;
+    const p = prefs.workoutPlanId || null;
+    if (d && p && step !== 'view-plan') {
+      setDays(d);
+      setSelectedPlan(p);
+      setStep('view-plan');
+    }
+  }, [userInfo]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Re-read totalWeeks whenever journey length changes
   useEffect(() => {
     const handler = (e) => {
