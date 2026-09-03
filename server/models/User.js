@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   age: { type: Number, required: true },
   height: { type: Number, required: true }, // in cm
   weight: { type: Number, required: true }, // in kg
-  role: { type: String, default: 'user' },
+
   profilePicture: { type: String, default: null }, // stores filename of uploaded pfp
 
   // Journey / Streak tracking
@@ -29,7 +29,6 @@ const UserSchema = new mongoose.Schema({
     // "Save for future" flags — only true when user explicitly checks the box
     saveDiet:         { type: Boolean, default: false },
     saveWorkout:      { type: Boolean, default: false },
-    // Last journey day the user completed (for Admin visibility)
     lastCompletedDay: { type: Number,  default: null },
     // Timestamp of last preference change
     prefsUpdatedAt:   { type: Date,    default: null },

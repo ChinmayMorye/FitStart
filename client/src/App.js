@@ -13,7 +13,7 @@ import Dashboard from './pages/Dashboard';
 import DietPage from './pages/DietPage';
 import WorkoutPage from './pages/WorkoutPage';
 import StreakPage from './pages/StreakPage';
-import AdminPage from './pages/AdminPage';
+
 import { JourneyProvider, useJourney } from './context/JourneyContext';
 
 // ── Splash Screen — Cinematic Boot Sequence ─────────────────────────────────
@@ -967,8 +967,7 @@ function AppRoutes() {
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
 
-      {/* Admin — password-gated, no login required */}
-      <Route path="/admin" element={<AdminPage />} />
+
     </Routes>
   );
 }

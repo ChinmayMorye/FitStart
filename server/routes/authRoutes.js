@@ -377,34 +377,6 @@ router.patch('/preferences', verifyToken, async (req, res) => {
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// UPDATE BODY STATS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-// PATCH /api/auth/update-body-stats
-router.patch('/update-body-stats', verifyToken, async (req, res) => {
-  try {
-    const { height, weight, age } = req.body;
-    const updates = { updated_at: new Date().toISOString() };
-
-    if (height !== undefined && height > 0 && height <= 300) updates.height = Number(height);
-    if (weight !== undefined && weight > 0 && weight <= 500) updates.weight = Number(weight);
-    if (age    !== undefined && age    > 0 && age    <= 120)  updates.age    = Number(age);
-
-    const { data: updated, error } = await supabase
-      .from('users')
-      .update(updates)
-      .eq('id', req.userId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    res.json({ message: 'Body stats updated', height: updated.height, weight: updated.weight, age: updated.age });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // RESET ROUTES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -443,83 +415,29 @@ router.patch('/reset-journey', verifyToken, async (req, res) => {
   }
 });
 
-// POST /api/auth/admin-reset
-router.post('/admin-reset', async (req, res) => {
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// UPDATE BODY STATS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// PATCH /api/auth/update-body-stats
+router.patch('/update-body-stats', verifyToken, async (req, res) => {
   try {
-    const { username, secret } = req.body;
-    if (secret !== 'fitstart_admin_2024') return res.status(403).json({ message: 'Forbidden' });
+    const { height, weight, age } = req.body;
+    const updates = { updated_at: new Date().toISOString() };
 
-    const { data: user, error: fetchError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('username', username)
-      .single();
-
-    if (fetchError || !user) return res.status(404).json({ message: `User '${username}' not found` });
+    if (height !== undefined && height > 0 && height <= 300) updates.height = Number(height);
+    if (weight !== undefined && weight > 0 && weight <= 500) updates.weight = Number(weight);
+    if (age    !== undefined && age    > 0 && age    <= 120)  updates.age    = Number(age);
 
     const { data: updated, error } = await supabase
       .from('users')
-      .update({
-        journey_total_days:     null,
-        journey_workout_place:  [],
-        journey_completed_days: [],
-        journey_start_date:     null,
-        journey_last_active:    null,
-        journey_streak:         0,
-        updated_at:             new Date().toISOString(),
-      })
-      .eq('id', user.id)
+      .update(updates)
+      .eq('id', req.userId)
       .select()
       .single();
 
     if (error) throw error;
-    await supabase.from('day_histories').delete().eq('user_id', user.id);
-
-    res.json({ message: `Journey reset for ${username}`, journeyData: serializeJourney(updated) });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET /api/auth/admin/stats
-router.get('/admin/stats', async (req, res) => {
-  try {
-    const { secret } = req.query;
-    if (secret !== 'fitstart_admin_2024') return res.status(403).json({ message: 'Forbidden' });
-
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    const { data: allUsers }    = await supabase.from('users').select('*').order('created_at', { ascending: false });
-    const { count: totalUsers } = await supabase.from('users').select('*', { count: 'exact', head: true });
-    const { data: newUsers }    = await supabase.from('users').select('*').gte('created_at', sevenDaysAgo).order('created_at', { ascending: false });
-    const { data: activeUsers } = await supabase.from('users').select('*').gte('journey_last_active', sevenDaysAgo).order('journey_last_active', { ascending: false });
-    const { data: vegUsers }    = await supabase.from('users').select('id').eq('diet_plan', 'veg');
-    const { data: nonvegUsers } = await supabase.from('users').select('id').eq('diet_plan', 'nonveg');
-
-    res.json({
-      totalUsers,
-      newUsersThisWeek: newUsers?.length || 0,
-      recentlyActive:   activeUsers?.length || 0,
-      dietBreakdown: { veg: vegUsers?.length || 0, nonveg: nonvegUsers?.length || 0 },
-      allUsers,
-      newUsers,
-      activeUsers,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// DELETE /api/auth/admin/clear-all
-router.delete('/admin/clear-all', async (req, res) => {
-  try {
-    const { secret } = req.query;
-    if (secret !== 'fitstart_admin_2024') return res.status(403).json({ message: 'Forbidden' });
-
-    const { data: historyResult } = await supabase.from('day_histories').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    const { data: userResult }    = await supabase.from('users').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-    res.json({ message: 'All users and history deleted.' });
+    res.json({ message: 'Body stats updated', height: updated.height, weight: updated.weight, age: updated.age });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

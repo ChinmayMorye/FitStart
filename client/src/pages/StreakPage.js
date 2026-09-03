@@ -431,7 +431,7 @@ export default function StreakPage() {
         }
       } catch (_) {}
 
-      // ── Persist lastCompletedDay to preferences (Admin visibility) ────────
+      // ── Persist lastCompletedDay to preferences ────────────────────────
       const token = localStorage.getItem('fitstart_token');
       if (token) {
         fetch(`${API_BASE}/api/auth/preferences`, {
