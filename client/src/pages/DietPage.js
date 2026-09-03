@@ -766,6 +766,30 @@ export default function DietPage({ userInfo }) {
 
   // Ref for auto-scrolling to the active (current journey) day card
   const activeDayScrollRef = useRef(null);
+  // Ref for debounced server save of checkbox states
+  const saveChecksTimerRef = useRef(null);
+
+  // Fire-and-forget: collect ALL diet check keys from localStorage and PATCH server
+  const saveDietChecksToServer = useCallback(() => {
+    const token = localStorage.getItem('fitstart_token');
+    if (!token) return;
+    const dietChecks = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('fitstart_diet_checks_')) {
+        const shortKey = k.replace('fitstart_diet_checks_', '');
+        try {
+          const val = JSON.parse(localStorage.getItem(k) || '{}');
+          if (Object.keys(val).length > 0) dietChecks[shortKey] = val;
+        } catch (_) {}
+      }
+    }
+    fetch(`${API_BASE}/api/auth/daily-checks`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ dietChecks }),
+    }).catch(() => {});
+  }, []);
 
   // Re-render whenever a journey day is completed from StreakPage
   useSyncListener(useCallback(() => setSyncVersion(v => v + 1), []));
@@ -881,9 +905,12 @@ export default function DietPage({ userInfo }) {
       const totalItems = plan.reduce((s, slot) => s + slot.items.filter(i => !i.hide).length, 0);
       const doneItems  = Object.keys(next).filter(k => next[k]).length;
       saveDayChecks(selected, week, day, next, totalItems > 0 && doneItems === totalItems);
+      // Debounce-save to server (1.5s after last action)
+      clearTimeout(saveChecksTimerRef.current);
+      saveChecksTimerRef.current = setTimeout(saveDietChecksToServer, 1500);
       return next;
     });
-  }, [selected, week, day, resolvedPlan]);
+  }, [selected, week, day, resolvedPlan, saveDietChecksToServer]);
 
   const handleCheckAll = useCallback((val) => {
     const planWeek = week % 4;
@@ -898,9 +925,12 @@ export default function DietPage({ userInfo }) {
       keys.forEach(k => { if (val) next[k] = true; else delete next[k]; });
       // val=true means all checked, val=false means unchecked
       saveDayChecks(selected, week, day, next, val && keys.length > 0);
+      // Debounce-save to server
+      clearTimeout(saveChecksTimerRef.current);
+      saveChecksTimerRef.current = setTimeout(saveDietChecksToServer, 1500);
       return next;
     });
-  }, [selected, week, day, resolvedPlan]);
+  }, [selected, week, day, resolvedPlan, saveDietChecksToServer]);
 
   const handleWeekChange = (w) => { setWeek(w); setDay(0); };
 

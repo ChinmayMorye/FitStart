@@ -43,6 +43,32 @@ function saveMuscles(week, dayName, arr) {
   localStorage.setItem(muscleKey(week, dayName), JSON.stringify(arr));
 }
 
+// ── Debounced server save for all workout muscle states ───────────────────────
+let _workoutSaveTimer = null;
+function scheduleWorkoutSave() {
+  clearTimeout(_workoutSaveTimer);
+  _workoutSaveTimer = setTimeout(() => {
+    const token = localStorage.getItem('fitstart_token');
+    if (!token) return;
+    const workoutChecks = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('fitstart_muscles_')) {
+        const shortKey = k.replace('fitstart_muscles_', '');
+        try {
+          const val = JSON.parse(localStorage.getItem(k) || 'null');
+          if (Array.isArray(val) && val.some(Boolean)) workoutChecks[shortKey] = val;
+        } catch (_) {}
+      }
+    }
+    fetch(`${API_BASE}/api/auth/daily-checks`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ workoutChecks }),
+    }).catch(() => {});
+  }, 1500);
+}
+
 // ── Week-level done flag ──────────────────────────────────────────────────────
 function weekDoneKey(week) { return `fitstart_week_done_w${week}`; }
 function isWeekDone(week) { return localStorage.getItem(weekDoneKey(week)) === '1'; }
@@ -67,6 +93,7 @@ function WorkoutDayCard({ dayData, weekIndex, dayName, accentColor, isActiveDday
       const next = [...prev];
       next[i] = !next[i];
       saveMuscles(weekIndex, dayName, next);
+      scheduleWorkoutSave(); // debounce-save to server
       if (next.every(Boolean)) setTimeout(() => onAllMusclesDone(), 500);
       return next;
     });

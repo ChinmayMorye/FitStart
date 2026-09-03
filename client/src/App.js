@@ -740,6 +740,31 @@ function restoreCompletedDayFlags(journeyData, preferences) {
   });
 }
 
+// ── Restore individual checkbox states from server ────────────────────────────
+// preferences.dietChecks    = { "veg_w0_d0": { "m0_i0": true, ... }, ... }
+// preferences.workoutChecks = { "w0_monday": [true, false, ...], ... }
+// These get written back to their localStorage keys so DietPage/WorkoutPage
+// show the exact same checked items the user had before logging out.
+function restoreDailyChecks(preferences) {
+  if (!preferences) return;
+  try {
+    const dietChecks = preferences.dietChecks || {};
+    Object.entries(dietChecks).forEach(([key, checks]) => {
+      if (checks && Object.keys(checks).length > 0) {
+        localStorage.setItem(`fitstart_diet_checks_${key}`, JSON.stringify(checks));
+      }
+    });
+  } catch (_) {}
+  try {
+    const workoutChecks = preferences.workoutChecks || {};
+    Object.entries(workoutChecks).forEach(([key, checks]) => {
+      if (Array.isArray(checks) && checks.some(Boolean)) {
+        localStorage.setItem(`fitstart_muscles_${key}`, JSON.stringify(checks));
+      }
+    });
+  } catch (_) {}
+}
+
 
 // ── Clear all FitStart localStorage keys (called on logout / new login) ───────
 // Pass keepToken to preserve the freshly-received token across user switches.
@@ -827,6 +852,8 @@ function AppRoutes() {
                 localStorage.setItem('fitstart_streak', JSON.stringify(dbUser.journeyData));
               // ── Restore per-day done flags → DietPage & WorkoutPage show ✓ DONE ────
               restoreCompletedDayFlags(dbUser.journeyData, dbUser.preferences);
+              // ── Restore individual checkbox states from server ────────────────────
+              restoreDailyChecks(dbUser.preferences);
             }
           } catch (_) {}
         } catch (_) {}
@@ -876,6 +903,8 @@ function AppRoutes() {
       // Writes fitstart_day_done_w{W}_d{D} for every completed journey day so
       // loadDayChecks() and loadMuscles() can synthesize the checked state.
       restoreCompletedDayFlags(user.journeyData, user.preferences);
+      // ── Restore individual checkbox states from server ────────────────────
+      restoreDailyChecks(user.preferences);
 
       // ── Sync journey context (React state) ───────────────────────────────
       syncFromProfile(user.journeyData);

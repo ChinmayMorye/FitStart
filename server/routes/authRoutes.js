@@ -57,6 +57,9 @@ function serializePreferences(user) {
     // "Both" diet day allocation
     bothVegDays:      user.both_veg_days    || [],
     bothNonVegDays:   user.both_nonveg_days || [],
+    // Per-day checkbox states (restored on login so checked items persist)
+    dietChecks:       user.diet_checks    || {},
+    workoutChecks:    user.workout_checks || {},
   };
 }
 
@@ -445,6 +448,38 @@ router.patch('/update-body-stats', verifyToken, async (req, res) => {
 
     if (error) throw error;
     res.json({ message: 'Body stats updated', height: updated.height, weight: updated.weight, age: updated.age });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DAILY CHECKS — save individual meal/muscle tick states
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// PATCH /api/auth/daily-checks
+// Saves diet checkbox states and/or workout muscle tick states server-side.
+// dietChecks format:    { "veg_w0_d0": { "m0_i0": true, ... }, ... }
+// workoutChecks format: { "w0_monday": [true, false, true], ... }
+router.patch('/daily-checks', verifyToken, async (req, res) => {
+  try {
+    const { dietChecks, workoutChecks } = req.body;
+    const updates = { updated_at: new Date().toISOString() };
+
+    if (dietChecks    !== undefined && typeof dietChecks    === 'object') updates.diet_checks    = dietChecks;
+    if (workoutChecks !== undefined && typeof workoutChecks === 'object') updates.workout_checks = workoutChecks;
+
+    if (Object.keys(updates).length === 1) {
+      return res.json({ message: 'No changes' });
+    }
+
+    const { error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', req.userId);
+
+    if (error) throw error;
+    res.json({ message: 'Checks saved' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
