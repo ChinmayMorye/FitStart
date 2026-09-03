@@ -9,6 +9,10 @@
       "destination": "https://fitstart-wrun.onrender.com/uploads/:path*"
     },
     {
+      "source": "/google05db7bdb5fdaab3c.html",
+      "destination": "/google05db7bdb5fdaab3c.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
