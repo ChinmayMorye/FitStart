@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://fitstart-backend.onrender.com/api/:path*"
+      "destination": "https://fitstart-wrun.onrender.com/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "https://fitstart-backend.onrender.com/uploads/:path*"
+      "destination": "https://fitstart-wrun.onrender.com/uploads/:path*"
     },
     {
       "source": "/(.*)",
