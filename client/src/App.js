@@ -853,10 +853,10 @@ function AppRoutes() {
               restoreDailyChecks(dbUser.preferences);
             }
           } catch (_) {}
-        } catch (_) {}
-      }
-      setShowSplash(false);
-    }, 1200);
+        })();
+      } catch (_) {}
+    }
+    const timer = setTimeout(() => setShowSplash(false), 1200);
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
