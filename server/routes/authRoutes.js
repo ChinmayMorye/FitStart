@@ -54,6 +54,9 @@ function serializePreferences(user) {
     saveWorkout:      user.save_workout,
     lastCompletedDay: user.last_completed_day,
     prefsUpdatedAt:   user.pref_updated_at,
+    // "Both" diet day allocation
+    bothVegDays:      user.both_veg_days    || [],
+    bothNonVegDays:   user.both_nonveg_days || [],
   };
 }
 
@@ -335,7 +338,8 @@ router.get('/history', verifyToken, async (req, res) => {
 router.patch('/preferences', verifyToken, async (req, res) => {
   try {
     const { dietType, workoutDays, workoutPlanId, username, restDay,
-            saveDiet, saveWorkout, lastCompletedDay } = req.body;
+            saveDiet, saveWorkout, lastCompletedDay,
+            bothVegDays, bothNonVegDays } = req.body;
 
     const updates = { pref_updated_at: new Date().toISOString(), updated_at: new Date().toISOString() };
 
@@ -346,6 +350,9 @@ router.patch('/preferences', verifyToken, async (req, res) => {
     if (saveDiet      !== undefined) updates.save_diet    = !!saveDiet;
     if (saveWorkout   !== undefined) updates.save_workout = !!saveWorkout;
     if (lastCompletedDay !== undefined) updates.last_completed_day = lastCompletedDay;
+    // "Both" diet day allocation — stored as integer arrays
+    if (bothVegDays    !== undefined && Array.isArray(bothVegDays))    updates.both_veg_days    = bothVegDays;
+    if (bothNonVegDays !== undefined && Array.isArray(bothNonVegDays)) updates.both_nonveg_days = bothNonVegDays;
 
     if (username !== undefined && username.trim().length >= 2) {
       const { data: taken } = await supabase

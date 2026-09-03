@@ -847,11 +847,13 @@ export default function DietPage({ userInfo }) {
     if (pref) {
       setSelected(pref);
       setSavedPref(pref);
-      // Restore both-diet day configuration
+      // Restore both-diet day configuration — prefer server values, fall back to localStorage
       if (pref === 'both') {
         try {
-          const vegDays    = JSON.parse(localStorage.getItem('fitstart_both_veg_days')    || '[]');
-          const nonVegDays = JSON.parse(localStorage.getItem('fitstart_both_nonveg_days') || '[]');
+          const serverVeg    = userInfo?.preferences?.bothVegDays;
+          const serverNonVeg = userInfo?.preferences?.bothNonVegDays;
+          const vegDays    = (serverVeg    && serverVeg.length)    ? serverVeg    : JSON.parse(localStorage.getItem('fitstart_both_veg_days')    || '[]');
+          const nonVegDays = (serverNonVeg && serverNonVeg.length) ? serverNonVeg : JSON.parse(localStorage.getItem('fitstart_both_nonveg_days') || '[]');
           setBothVegDays(vegDays);
           setBothNonVegDays(nonVegDays);
         } catch (_) {}
@@ -915,14 +917,24 @@ export default function DietPage({ userInfo }) {
       if (!u.preferences) u.preferences = {};
       u.preferences.dietType = typeToSave;
       u.preferences.saveDiet = true;
+      if (typeToSave === 'both') {
+        u.preferences.bothVegDays    = bothVegDays;
+        u.preferences.bothNonVegDays = bothNonVegDays;
+      }
       localStorage.setItem('fitstart_user', JSON.stringify(u));
     } catch (_) {}
     setSavedPref(typeToSave);
     try {
       if (token) {
+        const body = { dietType: typeToSave, saveDiet: true };
+        // Include both-diet day allocation so it survives logout → login
+        if (typeToSave === 'both') {
+          body.bothVegDays    = bothVegDays;
+          body.bothNonVegDays = bothNonVegDays;
+        }
         await fetch(`${API_BASE}/api/auth/preferences`, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ dietType: typeToSave, saveDiet: true }),
+          body: JSON.stringify(body),
         });
       }
     } catch (_) {

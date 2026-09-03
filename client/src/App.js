@@ -815,9 +815,17 @@ function AppRoutes() {
               else                     localStorage.removeItem('fitstart_workout_plan');
               // restDay — always has a value; default 'Sunday' if missing
               localStorage.setItem('fitstart_rest_day', prefs.restDay || 'Sunday');
+              // "Both" diet day allocation — restore from server so DietPage skips re-setup
+              if (prefs.dietType === 'both') {
+                if (prefs.bothVegDays?.length)    localStorage.setItem('fitstart_both_veg_days',    JSON.stringify(prefs.bothVegDays));
+                if (prefs.bothNonVegDays?.length) localStorage.setItem('fitstart_both_nonveg_days', JSON.stringify(prefs.bothNonVegDays));
+              } else {
+                localStorage.removeItem('fitstart_both_veg_days');
+                localStorage.removeItem('fitstart_both_nonveg_days');
+              }
               if (dbUser.journeyData?.totalDays)
                 localStorage.setItem('fitstart_streak', JSON.stringify(dbUser.journeyData));
-              // \u2500\u2500 Restore per-day done flags \u2192 DietPage & WorkoutPage show \u2713 DONE \u2500\u2500\u2500\u2500
+              // ── Restore per-day done flags → DietPage & WorkoutPage show ✓ DONE ────
               restoreCompletedDayFlags(dbUser.journeyData, dbUser.preferences);
             }
           } catch (_) {}
@@ -849,6 +857,14 @@ function AppRoutes() {
       if (prefs.workoutPlanId) localStorage.setItem('fitstart_workout_plan', prefs.workoutPlanId);
       else                     localStorage.removeItem('fitstart_workout_plan');
       localStorage.setItem('fitstart_rest_day', prefs.restDay || 'Sunday');
+      // "Both" diet day allocation — restore from server so DietPage skips re-setup
+      if (prefs.dietType === 'both') {
+        if (prefs.bothVegDays?.length)    localStorage.setItem('fitstart_both_veg_days',    JSON.stringify(prefs.bothVegDays));
+        if (prefs.bothNonVegDays?.length) localStorage.setItem('fitstart_both_nonveg_days', JSON.stringify(prefs.bothNonVegDays));
+      } else {
+        localStorage.removeItem('fitstart_both_veg_days');
+        localStorage.removeItem('fitstart_both_nonveg_days');
+      }
 
       // ── Sync journey cache ────────────────────────────────────────────────
       if (user.journeyData?.totalDays)
