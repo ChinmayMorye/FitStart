@@ -758,7 +758,22 @@ export default function WorkoutPage({ userInfo }) {
         {step === 'view-plan' && (
           <>
             <button
-              onClick={() => { localStorage.removeItem('fitstart_workout_days'); localStorage.removeItem('fitstart_workout_plan'); setDays(null); setSelectedPlan(null); setStep('select-days'); }}
+              onClick={async () => {
+                localStorage.removeItem('fitstart_workout_days');
+                localStorage.removeItem('fitstart_workout_plan');
+                setDays(null); setSelectedPlan(null); setStep('select-days');
+                // Also clear on server so the plan doesn't restore on next login
+                const token = localStorage.getItem('fitstart_token');
+                if (token) {
+                  try {
+                    await fetch(`${API_BASE}/api/auth/preferences`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ workoutDays: null, workoutPlanId: null, saveWorkout: false }),
+                    });
+                  } catch (_) {}
+                }
+              }}
               className="btn-glass text-xs ml-2"
               style={{ padding: '5px 12px', borderRadius: '8px' }}
               title="Change plan"
