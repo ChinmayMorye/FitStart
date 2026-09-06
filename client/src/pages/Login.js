@@ -10,11 +10,21 @@ const Login = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [serverReady, setServerReady] = useState(false);
 
-  // Pre-warm the backend as soon as login page loads
+  // ── Pre-warm backend on page load so login feels instant ─────────────────────
   useEffect(() => {
-    fetch(`${API_BASE}/health`).catch(() => {});
+    const warmUp = async () => {
+      try {
+        await fetch(`${API_BASE}/health`, { method: 'GET' });
+        setServerReady(true);
+      } catch {
+        // silently fail — will retry on login
+      }
+    };
+    warmUp();
   }, []);
+  // ─────────────────────────────────────────────────────────────────────────────
 
   // ── Login with auto-retry for Render cold start ─────────────────────────────
   const fetchWithTimeout = (url, options, timeout = 65000) => {

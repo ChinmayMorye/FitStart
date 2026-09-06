@@ -18,10 +18,18 @@ const Signup = ({ onSignupSuccess }) => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Pre-warm the backend as soon as signup page loads
+  // ── Pre-warm backend on page load so signup feels instant ─────────────────
   useEffect(() => {
-    fetch(`${API_BASE}/health`).catch(() => {});
+    const warmUp = async () => {
+      try {
+        await fetch(`${API_BASE}/health`, { method: 'GET' });
+      } catch {
+        // silently fail
+      }
+    };
+    warmUp();
   }, []);
+  // ───────────────────────────────────────────────────────────────────────────
 
   const update = (field, value) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
