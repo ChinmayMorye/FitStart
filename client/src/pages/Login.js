@@ -11,7 +11,16 @@ const Login = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // ── All backend logic completely unchanged ──────────────────────────────────
+  // ── Login with auto-retry for Render cold start ─────────────────────────────
+  const fetchWithTimeout = (url, options, timeout = 65000) => {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('timeout')), timeout);
+      fetch(url, options)
+        .then(res => { clearTimeout(timer); resolve(res); })
+        .catch(err => { clearTimeout(timer); reject(err); });
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -22,35 +31,57 @@ const Login = ({ onLoginSuccess }) => {
     }
 
     setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password }),
-      });
+    let attempts = 0;
+    const maxAttempts = 2;
 
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        throw new Error('server_offline');
+    while (attempts < maxAttempts) {
+      try {
+        if (attempts > 0) {
+          setError('⏳ Server is waking up, please wait...');
+          await new Promise(r => setTimeout(r, 5000));
+        }
+
+        const res = await fetchWithTimeout(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username.trim(), password }),
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          throw new Error('server_offline');
+        }
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Invalid credentials');
+
+        localStorage.setItem('fitstart_token', data.token);
+        localStorage.setItem('fitstart_user', JSON.stringify(data.user));
+        onLoginSuccess({ user: data.user, token: data.token });
+        setLoading(false);
+        return;
+      } catch (err) {
+        attempts++;
+        const msg = err.message || '';
+        const isNetworkError = msg === 'server_offline' || msg === 'timeout' ||
+          msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('failed to fetch');
+
+        if (isNetworkError && attempts < maxAttempts) {
+          setError('⏳ Server is starting up (free tier cold start). Retrying...');
+          continue;
+        }
+
+        if (isNetworkError) {
+          setError('❌ Server is unreachable. It may still be waking up — please try again in 30 seconds.');
+        } else {
+          setError(msg || 'Login failed. Please check your credentials.');
+        }
+        break;
       }
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Invalid credentials');
-
-      localStorage.setItem('fitstart_token', data.token);
-      localStorage.setItem('fitstart_user', JSON.stringify(data.user));
-      onLoginSuccess({ user: data.user, token: data.token });
-    } catch (err) {
-      const msg = err.message || '';
-      if (msg === 'server_offline' || msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('failed to fetch')) {
-        setError('⚠️ Server is offline. Please start the backend server and try again.');
-      } else {
-        setError(msg || 'Login failed. Please check your credentials.');
-      }
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
+  // ────────────────────────────────────────────────────────────────────────────
   // ────────────────────────────────────────────────────────────────────────────
 
   const inputStyle = {

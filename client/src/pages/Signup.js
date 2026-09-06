@@ -48,6 +48,15 @@ const Signup = ({ onSignupSuccess }) => {
     setStep(2);
   };
 
+  const fetchWithTimeout = (url, options, timeout = 65000) => {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('timeout')), timeout);
+      fetch(url, options)
+        .then(res => { clearTimeout(timer); resolve(res); })
+        .catch(err => { clearTimeout(timer); reject(err); });
+    });
+  };
+
   const handleStep2 = async (e) => {
     e.preventDefault();
     setError('');
@@ -61,47 +70,68 @@ const Signup = ({ onSignupSuccess }) => {
     }
 
     setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formData.username.trim(),
-          password: formData.password,
-          age: Number(formData.age),
-          height: Number(formData.height),
-          weight: Number(formData.weight),
-        }),
-      });
+    let attempts = 0;
+    const maxAttempts = 2;
 
-      const ct = res.headers.get('content-type') || '';
-      if (!ct.includes('application/json')) throw new Error('server_offline');
+    while (attempts < maxAttempts) {
+      try {
+        if (attempts > 0) {
+          setError('⏳ Server is waking up, please wait...');
+          await new Promise(r => setTimeout(r, 5000));
+        }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+        const res = await fetchWithTimeout(`${API_BASE}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: formData.username.trim(),
+            password: formData.password,
+            age: Number(formData.age),
+            height: Number(formData.height),
+            weight: Number(formData.weight),
+          }),
+        });
 
-      const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: formData.username.trim(), password: formData.password }),
-      });
-      const lct = loginRes.headers.get('content-type') || '';
-      if (!lct.includes('application/json')) throw new Error('server_offline');
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) throw new Error('server_offline');
 
-      const loginData = await loginRes.json();
-      if (!loginRes.ok) throw new Error(loginData.message || 'Auto-login failed');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Registration failed');
 
-      onSignupSuccess({ user: loginData.user, token: loginData.token });
-    } catch (err) {
-      const msg = err.message || '';
-      if (msg === 'server_offline' || msg.toLowerCase().includes('failed to fetch')) {
-        setError('⚠️ Server is offline. Please start the backend server and try again.');
-      } else {
-        setError(msg || 'Something went wrong. Please try again.');
+        const loginRes = await fetchWithTimeout(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: formData.username.trim(), password: formData.password }),
+        });
+        const lct = loginRes.headers.get('content-type') || '';
+        if (!lct.includes('application/json')) throw new Error('server_offline');
+
+        const loginData = await loginRes.json();
+        if (!loginRes.ok) throw new Error(loginData.message || 'Auto-login failed');
+
+        onSignupSuccess({ user: loginData.user, token: loginData.token });
+        setLoading(false);
+        return;
+      } catch (err) {
+        attempts++;
+        const msg = err.message || '';
+        const isNetworkError = msg === 'server_offline' || msg === 'timeout' ||
+          msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('failed to fetch');
+
+        if (isNetworkError && attempts < maxAttempts) {
+          setError('⏳ Server is starting up (free tier cold start). Retrying...');
+          continue;
+        }
+
+        if (isNetworkError) {
+          setError('❌ Server is starting up. Please wait 30 seconds and try again.');
+        } else {
+          setError(msg || 'Something went wrong. Please try again.');
+        }
+        break;
       }
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const strengthScore = () => {
