@@ -736,8 +736,8 @@ export default function Dashboard({ userInfo, onLogout }) {
         style={{
           position: 'sticky', top: 0, zIndex: 100,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '0 2rem',
-          height: '70px',
+          padding: '0 2.5rem',
+          height: '96px',
           background: 'rgba(5,5,15,0.82)',
           backdropFilter: 'blur(28px)',
           WebkitBackdropFilter: 'blur(28px)',
@@ -748,14 +748,14 @@ export default function Dashboard({ userInfo, onLogout }) {
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            width: '36px', height: '36px', borderRadius: '10px',
+            width: '48px', height: '48px', borderRadius: '14px',
             background: 'linear-gradient(135deg, #22d3ee, #3b82f6)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '18px', fontWeight: 900,
-            boxShadow: '0 0 20px rgba(34,211,238,0.4)',
+            fontSize: '24px', fontWeight: 900,
+            boxShadow: '0 0 25px rgba(34,211,238,0.4)',
           }}>F</div>
           <span style={{
-            fontSize: '1.4rem', fontWeight: 900, letterSpacing: '-1px',
+            fontSize: '1.7rem', fontWeight: 900, letterSpacing: '-1px',
             background: 'linear-gradient(90deg, #22d3ee, #818cf8)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
           }}>FITSTART</span>
