@@ -477,11 +477,26 @@ export default function Dashboard({ userInfo, onLogout }) {
     fetch(`${API_BASE}/api/upload/pfp`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((data) => {
-        if (data.profilePictureUrl) setPfpUrl(`${API_BASE}${data.profilePictureUrl}`);
-        else if (userInfo?.profilePicture) setPfpUrl(`${API_BASE}/uploads/${userInfo.profilePicture}`);
+        // Support both full URLs (Supabase Storage) and legacy relative paths
+        if (data.profilePictureUrl) {
+          const url = data.profilePictureUrl.startsWith('http')
+            ? data.profilePictureUrl
+            : `${API_BASE}${data.profilePictureUrl}`;
+          setPfpUrl(url);
+        } else if (userInfo?.profilePicture) {
+          const url = userInfo.profilePicture.startsWith('http')
+            ? userInfo.profilePicture
+            : `${API_BASE}/uploads/${userInfo.profilePicture}`;
+          setPfpUrl(url);
+        }
       })
       .catch(() => {
-        if (userInfo?.profilePicture) setPfpUrl(`${API_BASE}/uploads/${userInfo.profilePicture}`);
+        if (userInfo?.profilePicture) {
+          const url = userInfo.profilePicture.startsWith('http')
+            ? userInfo.profilePicture
+            : `${API_BASE}/uploads/${userInfo.profilePicture}`;
+          setPfpUrl(url);
+        }
       });
   }, [userInfo]);
 
@@ -521,7 +536,10 @@ export default function Dashboard({ userInfo, onLogout }) {
       });
       const data = await res.json();
       if (res.ok && data.profilePictureUrl) {
-        setPfpUrl(`${API_BASE}${data.profilePictureUrl}?t=${Date.now()}`);
+        const newUrl = data.profilePictureUrl.startsWith('http')
+          ? `${data.profilePictureUrl}?t=${Date.now()}`
+          : `${API_BASE}${data.profilePictureUrl}?t=${Date.now()}`;
+        setPfpUrl(newUrl);
         const storedUser = localStorage.getItem('fitstart_user');
         if (storedUser) {
           try {
@@ -768,13 +786,13 @@ export default function Dashboard({ userInfo, onLogout }) {
               setShowWorkoutSubMenu(false);
             }}
             style={{
-              width: '56px', height: '56px', borderRadius: '50%',
+              width: '80px', height: '80px', borderRadius: '50%',
               background: pfpUrl ? 'transparent' : 'linear-gradient(135deg, #00b4d8, #7c3aed)',
-              border: '2px solid rgba(0,240,255,0.5)',
+              border: '3px solid rgba(0,240,255,0.6)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 900, fontSize: '22px', overflow: 'hidden',
+              fontWeight: 900, fontSize: '28px', overflow: 'hidden',
               cursor: 'pointer', transition: 'all 0.3s',
-              boxShadow: '0 0 20px rgba(0,240,255,0.35), 0 0 40px rgba(0,240,255,0.1)',
+              boxShadow: '0 0 25px rgba(0,240,255,0.45), 0 0 50px rgba(0,240,255,0.15)',
             }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 0 30px rgba(0,240,255,0.6), 0 0 60px rgba(0,240,255,0.2)'; e.currentTarget.style.borderColor = 'rgba(0,240,255,0.8)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0,240,255,0.35), 0 0 40px rgba(0,240,255,0.1)'; e.currentTarget.style.borderColor = 'rgba(0,240,255,0.5)'; }}
