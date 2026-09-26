@@ -1318,6 +1318,7 @@ export default function Dashboard({ userInfo, onLogout }) {
             </button>
           ))}
         </div>
+      </div>
 
       {/* ═══ JOURNEY SETUP MODAL ═══ */}
       {journeyOpen && (
