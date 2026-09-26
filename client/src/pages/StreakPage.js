@@ -293,30 +293,42 @@ export default function StreakPage() {
   // ── Open modal on day click ────────────────────────────────────────────
   const handleDayClick = (day) => {
     if (day !== currentDay) return;
+
+    const userData  = getUserData();
+    const dietType  = userData?.preferences?.dietType;
+    const wDays     = parseInt(localStorage.getItem('fitstart_workout_days') || '0') || null;
+    const planId    = localStorage.getItem('fitstart_workout_plan') || null;
+
+    // If diet plan not set → redirect to Diet page to set it permanently first
+    if (!dietType) {
+      setToast('🥗 Please choose your Diet Plan first!');
+      setTimeout(() => { setToast(null); navigate('/diet'); }, 1500);
+      return;
+    }
+
+    // If workout plan not set → redirect to Workout page to set it permanently first
+    if (!wDays || !planId) {
+      setToast('🏋️ Please set up your Workout Plan first!');
+      setTimeout(() => { setToast(null); navigate('/workout'); }, 1500);
+      return;
+    }
+
     setSelectedDay(day);
     setRestDone(false);
     setDietTypeChoice(null);
 
-    const userData   = getUserData();
-    const dietType   = userData?.preferences?.dietType;
-    const startDate  = getUserData()?.journeyData?.startDate || new Date().toISOString();
-    const wDays = parseInt(localStorage.getItem('fitstart_workout_days') || '0') || null;
-    const planId= localStorage.getItem('fitstart_workout_plan') || null;
+    const startDate = getUserData()?.journeyData?.startDate || new Date().toISOString();
 
-    if (!dietType) {
-      // No diet type set → mandatory selection
-      setModalStep('diet-setup');
-    } else {
-      // Load diet meals for this day
-      const meals = getDietForDay(day, startDate, dietType);
-      setDayMeals(meals);
-      setCheckedMeals(Array(meals.length).fill(false));
-      // Pre-compute workout info
-      const wInfo = getWorkoutInfoForDay(day, startDate, wDays, planId);
-      setWorkoutInfo(wInfo);
-      if (wInfo?.type === 'workout') setCheckedMuscles(Array(wInfo.dayData.muscles.length).fill(false));
-      setModalStep('diet');
-    }
+    // Load diet meals for this day
+    const meals = getDietForDay(day, startDate, dietType);
+    setDayMeals(meals);
+    setCheckedMeals(Array(meals.length).fill(false));
+
+    // Pre-compute workout info
+    const wInfo = getWorkoutInfoForDay(day, startDate, wDays, planId);
+    setWorkoutInfo(wInfo);
+    if (wInfo?.type === 'workout') setCheckedMuscles(Array(wInfo.dayData.muscles.length).fill(false));
+    setModalStep('diet');
   };
 
   // ── Diet type setup: save & advance ───────────────────────────────────
@@ -359,7 +371,10 @@ export default function StreakPage() {
     const wDays  = parseInt(localStorage.getItem('fitstart_workout_days') || '0') || null;
     const planId = localStorage.getItem('fitstart_workout_plan') || null;
     if (!wDays || !planId) {
-      setModalStep('workout-prompt');
+      // No workout plan set — close modal and redirect to workout page
+      closeModal();
+      setToast('🏋️ Please set up your Workout Plan!');
+      setTimeout(() => { setToast(null); navigate('/workout'); }, 1500);
     } else {
       setModalStep('workout');
     }
