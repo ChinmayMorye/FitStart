@@ -780,9 +780,14 @@ export default function StreakPage() {
                     </div>
                   )}
 
-                  {!allMealsChecked && (
+                  {checkedMeals.filter(Boolean).length > 0 && !allMealsChecked && (
+                    <p className="text-gray-500 text-xs text-center mb-4">
+                      ✅ {checkedMeals.filter(Boolean).length} of {dayMeals.length} meals marked — you can still proceed
+                    </p>
+                  )}
+                  {checkedMeals.filter(Boolean).length === 0 && (
                     <p className="text-gray-600 text-xs text-center mb-4">
-                      ☝️ Tap each meal slot to confirm you completed it
+                      ☝️ Tap meal slots to mark what you completed — or skip ahead
                     </p>
                   )}
 
@@ -795,11 +800,10 @@ export default function StreakPage() {
                     </button>
                     <button
                       onClick={handleDietConfirmed}
-                      disabled={!allMealsChecked}
-                      className="flex-[2] py-3 rounded-xl text-white font-black text-sm disabled:opacity-30 transition-all hover:scale-[1.01] disabled:scale-100"
-                      style={allMealsChecked ? { background: 'linear-gradient(135deg, #10b981, #22d3ee)', boxShadow: '0 8px 25px rgba(16,185,129,0.35)' } : { background: 'rgba(255,255,255,0.06)' }}
+                      className="flex-[2] py-3 rounded-xl text-white font-black text-sm transition-all hover:scale-[1.01]"
+                      style={{ background: 'linear-gradient(135deg, #10b981, #22d3ee)', boxShadow: '0 8px 25px rgba(16,185,129,0.35)' }}
                     >
-                      {allMealsChecked ? 'Confirm Diet ✓ →' : `Check all ${dayMeals.length} meals first`}
+                      {allMealsChecked ? 'Diet Done ✓ — Next →' : 'Next →'}
                     </button>
                   </div>
                 </div>
@@ -1023,11 +1027,11 @@ export default function StreakPage() {
                     </button>
                     <button
                       onClick={handleMarkComplete}
-                      disabled={!workoutStepDone || savingDay}
-                      className="flex-[2] py-3 rounded-xl text-white font-black text-sm disabled:opacity-30 transition-all hover:scale-[1.01] disabled:scale-100"
-                      style={workoutStepDone && !savingDay ? { background: 'linear-gradient(135deg, #22d3ee, #10b981)', boxShadow: '0 8px 25px rgba(34,211,238,0.4)' } : { background: 'rgba(255,255,255,0.06)' }}
+                      disabled={savingDay}
+                      className="flex-[2] py-3 rounded-xl text-white font-black text-sm disabled:opacity-50 transition-all hover:scale-[1.01] disabled:scale-100"
+                      style={{ background: 'linear-gradient(135deg, #22d3ee, #10b981)', boxShadow: '0 8px 25px rgba(34,211,238,0.4)' }}
                     >
-                      {savingDay ? '⏳ Saving...' : workoutStepDone ? '🏆 Complete Day!' : 'Finish workout first'}
+                      {savingDay ? '⏳ Saving...' : '🏆 Complete Day!'}
                     </button>
                   </div>
                 </div>
