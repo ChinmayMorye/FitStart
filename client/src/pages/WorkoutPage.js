@@ -545,14 +545,18 @@ export default function WorkoutPage({ userInfo }) {
       let targetWeek = 0;
       try {
         const streak = JSON.parse(localStorage.getItem('fitstart_streak') || '{}');
-        const completedCount = (streak.completedDays || []).length;
-        // Journey week = which 7-day block the user is currently in (0-based)
-        const journeyWeek = completedCount > 0
-          ? Math.floor((completedCount - 1) / 7)   // week of the LAST completed day
-          : 0;
-        targetWeek = Math.min(journeyWeek, tw - 1); // safety cap
+        const userCache = JSON.parse(localStorage.getItem('fitstart_user') || '{}');
+        const rawStartDate = streak.startDate || userCache?.journeyData?.startDate;
+        if (rawStartDate) {
+          // Calculate journey week from today's actual date
+          const start = new Date(rawStartDate);
+          start.setHours(0, 0, 0, 0);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const daysSinceStart = Math.max(0, Math.floor((today - start) / 86400000));
+          targetWeek = Math.min(Math.floor(daysSinceStart / 7), tw - 1);
+        }
       } catch (_) {
-        // Fallback: find first week WorkoutPage considers incomplete
         for (let w = 0; w < tw; w++) {
           if (!isWeekDone(w)) { targetWeek = w; break; }
         }
@@ -625,9 +629,14 @@ export default function WorkoutPage({ userInfo }) {
     return 6; // all done
   }, [activePlan, days, restDayIdx]);
 
+  // Set active day to TODAY's actual calendar day-of-week
   useEffect(() => {
     if (step === 'view-plan' && activePlan) {
-      setActiveDayIdx(computeActiveDay(activeWeek));
+      // Get today's day-of-week index (0=Mon … 6=Sun)
+      const jsDay = new Date().getDay(); // 0=Sun
+      const todayDow = jsDay === 0 ? 6 : jsDay - 1; // convert to 0=Mon
+      setActiveDayIdx(todayDow);
+
       // Check if whole week done
       let allDone = true;
       const slots = buildSlots(days, restDayIdx);
@@ -644,7 +653,7 @@ export default function WorkoutPage({ userInfo }) {
       }
       setWeekComplete(allDone);
     }
-  }, [step, activeWeek, activePlan, computeActiveDay, days, restDayIdx]);
+  }, [step, activeWeek, activePlan, days, restDayIdx]);
 
   const handleDayDone = useCallback((idx) => {
     forceUpdate(n => n + 1);

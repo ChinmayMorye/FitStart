@@ -810,45 +810,31 @@ export default function DietPage({ userInfo }) {
   // Re-render whenever a journey day is completed from StreakPage
   useSyncListener(useCallback(() => setSyncVersion(v => v + 1), []));
 
-  // On mount: auto-navigate to the current journey day and scroll to it.
-  // Works even when startDate is missing (estimates it from today).
+  // On mount: auto-navigate to TODAY's calendar day so the user always sees today's plan.
   useEffect(() => {
     try {
       const streak    = JSON.parse(localStorage.getItem('fitstart_streak') || '{}');
       const userCache = JSON.parse(localStorage.getItem('fitstart_user')   || '{}');
 
-      const completedDays  = streak.completedDays || [];
-      const completedCount = completedDays.length;
+      // ── Today's day-of-week (0=Mon … 6=Sun) ─────────────────────────────
+      const now = new Date();
+      const jsDay = now.getDay();                        // 0=Sun, 1=Mon…
+      const todayDow = jsDay === 0 ? 6 : jsDay - 1;    // convert → 0=Mon
 
-      // Show the LAST completed day so the user sees what they just did.
-      // Fall back to day 1 if nothing is completed yet.
-      const targetJourneyDay = completedCount > 0 ? completedCount : 1;
-
-      // Journey week tab (0-based)
-      const journeyWeek = Math.floor((targetJourneyDay - 1) / 7);
-
-      // Day-of-week tab: needs startDate to anchor the rolling week.
-      // If startDate is not stored yet, estimate it from today − completedCount days.
-      const rawStartDate =
-        streak.startDate ||
-        userCache?.journeyData?.startDate;
-
-      const startDate = rawStartDate
-        ? new Date(rawStartDate)
-        : (() => {
-            const d = new Date();
-            d.setDate(d.getDate() - completedCount);
-            d.setHours(0, 0, 0, 0);
-            return d;
-          })();
-
-      const target = new Date(startDate);
-      target.setDate(startDate.getDate() + (targetJourneyDay - 1));
-      const jsDay    = target.getDay();                    // 0 = Sun
-      const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;     // convert → 0 = Mon
+      // ── Journey week: how many full weeks since journey start ────────────
+      const rawStartDate = streak.startDate || userCache?.journeyData?.startDate;
+      let journeyWeek = 0;
+      if (rawStartDate) {
+        const start = new Date(rawStartDate);
+        start.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const daysSinceStart = Math.max(0, Math.floor((today - start) / 86400000));
+        journeyWeek = Math.floor(daysSinceStart / 7);
+      }
 
       setWeek(journeyWeek);
-      setDay(dayOfWeek);
+      setDay(todayDow);
     } catch (_) {}
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
