@@ -532,28 +532,53 @@ function DayCompletePanel({ dietType, week, day, checks, plan, onCheckAll, isChe
         }} />
       </div>
 
-      {/* "All Meals Completed" button — triggers summary modal */}
-      <button onClick={() => onShowSummary(missedItems)} style={{
-        width: '100%', padding: '13px', borderRadius: '12px', fontWeight: 700, fontSize: '14px',
-        cursor: 'pointer', transition: 'all 0.25s',
-        background: isAllDone
-          ? 'linear-gradient(135deg, #10b981, #06b6d4)'
-          : done > 0
-            ? 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(234,179,8,0.12))'
-            : 'rgba(255,255,255,0.04)',
-        color: isAllDone ? '#fff' : done > 0 ? '#fbbf24' : '#6b7280',
-        border: isAllDone ? 'none' : done > 0 ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(255,255,255,0.06)',
-        boxShadow: isAllDone ? '0 4px 20px rgba(16,185,129,0.3)' : 'none',
-      }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-      >
-        {isAllDone
-          ? '✅ All Meals Completed! View Summary →'
-          : done > 0
-            ? '📊 All Meals Completed — View Summary'
-            : '📋 All Meals Completed — View Summary'}
-      </button>
+      {/* Buttons row */}
+      {isAllDone ? (
+        /* All done — single full-width celebrate button */
+        <button onClick={() => onShowSummary(missedItems)} style={{
+          width: '100%', padding: '13px', borderRadius: '12px', fontWeight: 700, fontSize: '14px',
+          cursor: 'pointer', transition: 'all 0.25s',
+          background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+          color: '#fff', border: 'none',
+          boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          ✅ All Meals Completed! View Summary →
+        </button>
+      ) : (
+        /* Partial / none — show "View Summary" + "Did My Best" side by side */
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => onShowSummary(missedItems)} style={{
+            flex: 1, padding: '13px', borderRadius: '12px', fontWeight: 700, fontSize: '13px',
+            cursor: 'pointer', transition: 'all 0.25s',
+            background: done > 0
+              ? 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(234,179,8,0.12))'
+              : 'rgba(255,255,255,0.04)',
+            color: done > 0 ? '#fbbf24' : '#6b7280',
+            border: done > 0 ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(255,255,255,0.06)',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            📊 View Summary
+          </button>
+          <button onClick={() => onShowSummary(missedItems)} style={{
+            flex: 1, padding: '13px', borderRadius: '12px', fontWeight: 800, fontSize: '13px',
+            cursor: 'pointer', transition: 'all 0.25s',
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(99,102,241,0.2))',
+            color: '#a78bfa',
+            border: '1px solid rgba(139,92,246,0.35)',
+            boxShadow: '0 4px 14px rgba(139,92,246,0.15)',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(139,92,246,0.3)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(139,92,246,0.15)'; }}
+          >
+            💪 Did My Best
+          </button>
+        </div>
+      )}
 
       {/* Celebration when all done */}
       {isAllDone && (
@@ -567,6 +592,18 @@ function DayCompletePanel({ dietType, week, day, checks, plan, onCheckAll, isChe
           </p>
         </div>
       )}
+      {/* "Did My Best" celebration — partial completion */}
+      {!isAllDone && done > 0 && (
+        <div style={{ marginTop: '12px', padding: '14px', background: 'linear-gradient(135deg,rgba(139,92,246,0.08),rgba(99,102,241,0.06))', border: '1px solid rgba(139,92,246,0.18)', borderRadius: '12px', textAlign: 'center' }}>
+          <p style={{ color: '#a78bfa', fontWeight: 700, fontSize: '13px', margin: 0 }}>
+            💪 {done}/{total} meals done — every effort counts!
+          </p>
+          <p style={{ color: '#4b5563', fontSize: '11px', marginTop: '3px', marginBottom: 0 }}>
+            Click "Did My Best" to wrap up today and move on 🌟
+          </p>
+        </div>
+      )}
+
     </div>
   );
 }
