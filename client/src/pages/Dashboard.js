@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const API_BASE = process.env.REACT_APP_API_URL || '';
@@ -44,44 +44,71 @@ const options = [
 function FloatingOrbs() {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {/* Neon cyan top-left */}
-      <div className="absolute animate-float" style={{ top: '-120px', left: '-120px', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(0,245,255,0.09) 0%, transparent 65%)', borderRadius: '50%', animationDuration: '12s' }} />
+      {/* Deep ambient: neon cyan top-left */}
+      <div className="absolute animate-float" style={{ top: '-150px', left: '-150px', width: '700px', height: '700px', background: 'radial-gradient(circle, rgba(0,245,255,0.07) 0%, rgba(0,245,255,0.02) 40%, transparent 70%)', borderRadius: '50%', animationDuration: '14s', filter: 'blur(1px)' }} />
       {/* Purple top-right */}
-      <div className="absolute animate-float-2" style={{ top: '-80px', right: '-120px', width: '550px', height: '550px', background: 'radial-gradient(circle, rgba(124,58,237,0.11) 0%, transparent 65%)', borderRadius: '50%', animationDuration: '14s' }} />
-      {/* Center subtle cyan */}
-      <div className="absolute animate-float" style={{ top: '40%', left: '50%', transform: 'translate(-50%, -50%)', width: '700px', height: '700px', background: 'radial-gradient(circle, rgba(0,245,255,0.04) 0%, transparent 65%)', borderRadius: '50%', animationDuration: '18s' }} />
-      {/* Bottom-right pink */}
-      <div className="absolute animate-float-2" style={{ bottom: '-140px', right: '-80px', width: '580px', height: '580px', background: 'radial-gradient(circle, rgba(255,0,128,0.08) 0%, transparent 65%)', borderRadius: '50%', animationDuration: '10s' }} />
+      <div className="absolute animate-float-2" style={{ top: '-100px', right: '-150px', width: '650px', height: '650px', background: 'radial-gradient(circle, rgba(124,58,237,0.09) 0%, rgba(124,58,237,0.02) 45%, transparent 70%)', borderRadius: '50%', animationDuration: '17s', filter: 'blur(1px)' }} />
+      {/* Center micro-bloom */}
+      <div className="absolute animate-float" style={{ top: '38%', left: '50%', transform: 'translate(-50%,-50%)', width: '900px', height: '900px', background: 'radial-gradient(circle, rgba(0,245,255,0.025) 0%, transparent 60%)', borderRadius: '50%', animationDuration: '22s' }} />
+      {/* Pink bottom-right */}
+      <div className="absolute animate-float-2" style={{ bottom: '-180px', right: '-100px', width: '680px', height: '680px', background: 'radial-gradient(circle, rgba(255,0,128,0.07) 0%, transparent 65%)', borderRadius: '50%', animationDuration: '11s', filter: 'blur(2px)' }} />
       {/* Green bottom-left */}
-      <div className="absolute animate-float" style={{ bottom: '-60px', left: '-60px', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(0,255,135,0.06) 0%, transparent 65%)', borderRadius: '50%', animationDuration: '16s' }} />
-      {/* Cyber grid */}
-      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(0,245,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,255,0.02) 1px, transparent 1px)', backgroundSize: '70px 70px' }} />
+      <div className="absolute animate-float" style={{ bottom: '-80px', left: '-80px', width: '480px', height: '480px', background: 'radial-gradient(circle, rgba(0,255,135,0.05) 0%, transparent 65%)', borderRadius: '50%', animationDuration: '19s', filter: 'blur(1px)' }} />
+      {/* Extra mid-right accent */}
+      <div className="absolute animate-float-2" style={{ top: '55%', right: '-60px', width: '350px', height: '350px', background: 'radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%)', borderRadius: '50%', animationDuration: '13s' }} />
+      {/* Fine cyber grid */}
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(0,245,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,255,0.018) 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
+      {/* Diagonal accent lines */}
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(45deg, rgba(0,245,255,0.008) 1px, transparent 1px)', backgroundSize: '128px 128px' }} />
+      {/* Vignette overlay */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(3,7,18,0.6) 100%)' }} />
     </div>
   );
 }
 
 
 function StatCard({ icon, value, label, color, delay, bgGrad }) {
+  const cardRef = useRef(null);
+  const handleMouseMove = useCallback((e) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 12;
+    const y = -((e.clientY - rect.top) / rect.height - 0.5) * 12;
+    el.style.transform = `perspective(600px) rotateX(${y}deg) rotateY(${x}deg) translateY(-4px) scale(1.02)`;
+    el.style.boxShadow = `0 0 50px ${color}30, 0 20px 50px rgba(0,0,0,0.6), ${x > 0 ? x * 2 : 0}px ${y > 0 ? y * 2 : 0}px 20px ${color}15`;
+  }, [color]);
+  const handleMouseLeave = useCallback((e) => {
+    const el = cardRef.current;
+    if (!el) return;
+    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)';
+    el.style.boxShadow = `0 0 30px ${color}18, 0 8px 32px rgba(0,0,0,0.5)`;
+  }, [color]);
   return (
     <div
+      ref={cardRef}
       className="relative flex flex-col items-center justify-center p-5 rounded-2xl text-center overflow-hidden"
       style={{
         background: bgGrad || 'rgba(6,13,26,0.6)',
         border: `1px solid ${color}28`,
         animation: `statPop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${delay}ms both`,
         boxShadow: `0 0 30px ${color}18, 0 8px 32px rgba(0,0,0,0.5)`,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        transition: 'transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s ease',
+        transformStyle: 'preserve-3d',
+        cursor: 'default',
       }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)'; e.currentTarget.style.boxShadow = `0 0 50px ${color}30, 0 16px 48px rgba(0,0,0,0.6)`; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = `0 0 30px ${color}18, 0 8px 32px rgba(0,0,0,0.5)`; }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* Top shimmer line */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: `linear-gradient(90deg, transparent, ${color}40, transparent)` }} />
-      <div style={{ fontSize: '1.9rem', marginBottom: '8px' }}>{icon}</div>
-      <p className="text-2xl font-black" style={{ color, fontFamily: "'Space Mono', monospace", letterSpacing: '-1px', textShadow: `0 0 20px ${color}60` }}>{value}</p>
-      <p className="text-xs uppercase tracking-widest mt-1" style={{ color: 'rgba(180,200,240,0.35)' }}>{label}</p>
+      {/* Animated shimmer top border */}
+      <div style={{ position: 'absolute', top: 0, left: '-100%', right: 0, height: '1px', background: `linear-gradient(90deg, transparent, ${color}80, transparent)`, animation: `shimmerScan 3s ease-in-out ${delay}ms infinite` }} />
+      {/* Corner accent */}
+      <div style={{ position: 'absolute', top: 0, right: 0, width: '40px', height: '40px', borderRadius: '0 16px 0 0', background: `radial-gradient(circle at top right, ${color}12, transparent 70%)` }} />
+      <div style={{ fontSize: '1.8rem', marginBottom: '8px', transform: 'translateZ(8px)', filter: `drop-shadow(0 0 8px ${color}60)` }}>{icon}</div>
+      <p style={{ fontSize: '1.5rem', fontWeight: 900, color, fontFamily: "'Barlow Condensed', 'Space Mono', monospace", letterSpacing: '-0.5px', textShadow: `0 0 20px ${color}60`, transform: 'translateZ(8px)', margin: 0 }}>{value}</p>
+      <p style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: '4px', color: 'rgba(180,200,240,0.35)', fontFamily: "'Barlow', sans-serif", fontWeight: 600 }}>{label}</p>
     </div>
   );
 }
@@ -695,13 +722,17 @@ export default function Dashboard({ userInfo, onLogout }) {
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #030712 0%, #0a0f1e 50%, #030712 100%)',
+        background: 'linear-gradient(160deg, #020617 0%, #080d1f 45%, #020617 100%)',
         color: '#fff',
         overflowX: 'hidden',
         position: 'relative',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Barlow', 'Inter', sans-serif",
       }}
     >
+      {/* Barlow fonts */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       <FloatingOrbs />
 
       {/* Hidden file input */}
@@ -748,16 +779,19 @@ export default function Dashboard({ userInfo, onLogout }) {
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            width: '48px', height: '48px', borderRadius: '14px',
+            width: '44px', height: '44px', borderRadius: '12px',
             background: 'linear-gradient(135deg, #22d3ee, #3b82f6)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '24px', fontWeight: 900,
-            boxShadow: '0 0 25px rgba(34,211,238,0.4)',
+            fontSize: '20px', fontWeight: 900, color: '#000',
+            boxShadow: '0 0 28px rgba(34,211,238,0.5), 0 0 60px rgba(34,211,238,0.15)',
+            fontFamily: "'Barlow Condensed', sans-serif",
+            letterSpacing: '-1px',
           }}>F</div>
           <span style={{
-            fontSize: '1.7rem', fontWeight: 900, letterSpacing: '-1px',
-            background: 'linear-gradient(90deg, #22d3ee, #818cf8)',
+            fontSize: '1.6rem', fontWeight: 900, letterSpacing: '-1px',
+            background: 'linear-gradient(90deg, #22d3ee 0%, #818cf8 60%, #ec4899 100%)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            fontFamily: "'Barlow Condensed', sans-serif",
           }}>FITSTART</span>
         </div>
 
@@ -1000,8 +1034,10 @@ export default function Dashboard({ userInfo, onLogout }) {
           </div>
 
           <h1 style={{
-            fontSize: 'clamp(2.8rem, 6vw, 5rem)',
-            fontWeight: 900, letterSpacing: '-2px', lineHeight: 1.05, marginBottom: '1rem',
+            fontSize: 'clamp(3rem, 7vw, 5.5rem)',
+            fontWeight: 900, letterSpacing: '-3px', lineHeight: 1.0, marginBottom: '1rem',
+            fontFamily: "'Barlow Condensed', sans-serif",
+            textTransform: 'uppercase',
           }}>
             Choose Your{' '}
             <span style={{
@@ -1010,7 +1046,9 @@ export default function Dashboard({ userInfo, onLogout }) {
               backgroundSize: '300% 300%', animation: 'gradientShift 4s ease infinite', display: 'inline-block',
             }}>Path</span>
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem', maxWidth: '400px', margin: '0 auto' }}>
+          {/* Animated accent line */}
+          <div style={{ width: '60px', height: '2px', background: 'linear-gradient(90deg, #22d3ee, #818cf8)', borderRadius: '99px', margin: '0 auto 16px', animation: 'expandLine 1s cubic-bezier(0.16,1,0.3,1) 0.3s both', boxShadow: '0 0 12px rgba(34,211,238,0.6)' }} />
+          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '1rem', maxWidth: '380px', margin: '0 auto', fontFamily: "'Barlow', sans-serif", fontWeight: 400, lineHeight: 1.6 }}>
             Your transformation starts with a single decision. Make it today.
           </p>
         </div>
@@ -1247,76 +1285,106 @@ export default function Dashboard({ userInfo, onLogout }) {
           </div>
         )}
 
-        {/* ── OPTION CARDS ── */}
+        {/* ── OPTION CARDS ── (Mouse-tracking 3D tilt) */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '3rem' }}>
-          {options.map((opt, i) => (
-            <button
-              key={opt.id}
-              id={`card-${opt.id}`}
-              onClick={() => navigate(opt.route)}
-              onMouseEnter={() => setHoveredCard(opt.id)}
-              onMouseLeave={() => setHoveredCard(null)}
-              style={{
-                position: 'relative', textAlign: 'left',
-                padding: '0', background: 'none', border: 'none',
-                cursor: 'pointer', borderRadius: '24px', overflow: 'hidden',
-                animation: `cardReveal 0.7s cubic-bezier(0.4,0,0.2,1) ${i * 0.15 + 0.1}s both`,
-                transform: hoveredCard === opt.id ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
-                transition: 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1)',
-                boxShadow: hoveredCard === opt.id
-                  ? `0 30px 80px ${opt.bgGlow.replace('0.12', '0.25')}, 0 0 0 1px ${opt.borderColor}`
-                  : `0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px ${opt.borderColor}`,
-              }}
-            >
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(10,12,25,0.95) 0%, rgba(5,8,18,0.98) 100%)', borderRadius: '24px', transition: 'all 0.4s' }} />
-              <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 20% 30%, ${opt.bgGlow.replace('0.12', hoveredCard === opt.id ? '0.25' : '0.08')} 0%, transparent 70%)`, borderRadius: '24px', transition: 'all 0.4s' }} />
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: opt.gradient, opacity: hoveredCard === opt.id ? 1 : 0.5, transition: 'opacity 0.4s' }} />
-              <div style={{ position: 'absolute', top: '20px', right: '24px', fontSize: '4rem', fontWeight: 900, lineHeight: 1, color: hoveredCard === opt.id ? `${opt.accent}15` : 'rgba(255,255,255,0.04)', fontFamily: "'Outfit', sans-serif", userSelect: 'none', transition: 'color 0.4s' }}>
-                {opt.number}
-              </div>
-              <div style={{ position: 'relative', padding: '2rem' }}>
-                <div style={{
-                  width: '64px', height: '64px', borderRadius: '18px',
-                  background: opt.bgGlow.replace('0.12', '0.2'),
-                  border: `1px solid ${opt.borderColor}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '2rem', marginBottom: '1.2rem', transition: 'all 0.4s',
-                  ...(hoveredCard === opt.id && {
-                    background: opt.gradient, border: 'none',
-                    boxShadow: `0 10px 30px ${opt.bgGlow.replace('0.12', '0.4')}`,
-                    transform: 'scale(1.1) rotate(-5deg)',
-                  }),
-                }}>{opt.icon}</div>
-                <h2 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.5rem', lineHeight: 1.2, color: hoveredCard === opt.id ? '#fff' : 'rgba(255,255,255,0.9)', transition: 'color 0.3s' }}>
-                  {opt.title}
-                </h2>
-                <p style={{ fontSize: '0.875rem', lineHeight: 1.6, color: hoveredCard === opt.id ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.4)', marginBottom: '1.5rem', transition: 'color 0.3s' }}>
-                  {opt.subtitle}
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '1.5rem' }}>
-                  {opt.tags.map((tag) => (
-                    <span key={tag} style={{ padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 600, background: opt.tagColor, border: `1px solid ${opt.tagBorder}`, color: opt.tagText, letterSpacing: '0.02em', transition: 'all 0.3s' }}>
-                      {tag}
-                    </span>
-                  ))}
+          {options.map((opt, i) => {
+            const cardRef3d = React.createRef();
+            const handleCardMove = (e) => {
+              const el = e.currentTarget;
+              const rect = el.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width - 0.5) * 18;
+              const y = -((e.clientY - rect.top) / rect.height - 0.5) * 14;
+              el.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg) translateY(-10px) scale(1.015)`;
+              el.style.boxShadow = `0 40px 90px ${opt.bgGlow.replace('0.12','0.3')}, 0 0 0 1px ${opt.borderColor}, ${x*1.5}px ${-y*1.5}px 30px ${opt.bgGlow.replace('0.12','0.2')}`;
+              const glow = el.querySelector('.card-glow');
+              if (glow) {
+                const px = ((e.clientX - rect.left) / rect.width) * 100;
+                const py = ((e.clientY - rect.top) / rect.height) * 100;
+                glow.style.background = `radial-gradient(circle at ${px}% ${py}%, ${opt.bgGlow.replace('0.12','0.3')} 0%, transparent 65%)`;
+              }
+            };
+            const handleCardLeave = (e) => {
+              setHoveredCard(null);
+              const el = e.currentTarget;
+              el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)';
+              el.style.boxShadow = `0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px ${opt.borderColor}`;
+              const glow = el.querySelector('.card-glow');
+              if (glow) glow.style.background = `radial-gradient(ellipse at 20% 30%, ${opt.bgGlow.replace('0.12','0.08')} 0%, transparent 70%)`;
+            };
+            return (
+              <button
+                key={opt.id}
+                id={`card-${opt.id}`}
+                onClick={() => navigate(opt.route)}
+                onMouseEnter={() => setHoveredCard(opt.id)}
+                onMouseMove={handleCardMove}
+                onMouseLeave={handleCardLeave}
+                style={{
+                  position: 'relative', textAlign: 'left',
+                  padding: '0', background: 'none', border: 'none',
+                  cursor: 'pointer', borderRadius: '24px', overflow: 'hidden',
+                  animation: `cardReveal 0.7s cubic-bezier(0.16,1,0.3,1) ${i * 0.18 + 0.1}s both`,
+                  transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease',
+                  boxShadow: `0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px ${opt.borderColor}`,
+                  transformStyle: 'preserve-3d',
+                  willChange: 'transform',
+                }}
+              >
+                {/* Base dark surface */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(8,10,22,0.96) 0%, rgba(4,6,16,0.98) 100%)', borderRadius: '24px' }} />
+                {/* Dynamic mouse-following glow */}
+                <div className="card-glow" style={{ position: 'absolute', inset: 0, borderRadius: '24px', background: `radial-gradient(ellipse at 20% 30%, ${opt.bgGlow.replace('0.12','0.08')} 0%, transparent 70%)`, transition: 'background 0.1s ease' }} />
+                {/* Top gradient line */}
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: opt.gradient, opacity: hoveredCard === opt.id ? 1 : 0.45, transition: 'opacity 0.4s', borderRadius: '24px 24px 0 0' }} />
+                {/* Shimmer scan on hover */}
+                {hoveredCard === opt.id && <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: `linear-gradient(105deg, transparent 40%, ${opt.accent}08 50%, transparent 60%)`, animation: 'cardShimmer 1.5s ease infinite', borderRadius: '24px' }} />}
+                {/* Large number watermark */}
+                <div style={{ position: 'absolute', top: '16px', right: '20px', fontSize: '5rem', fontWeight: 900, lineHeight: 1, color: hoveredCard === opt.id ? `${opt.accent}12` : 'rgba(255,255,255,0.03)', fontFamily: "'Barlow Condensed', sans-serif", userSelect: 'none', transition: 'color 0.4s', letterSpacing: '-4px' }}>
+                  {opt.number}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: opt.accent, opacity: hoveredCard === opt.id ? 1 : 0, transform: hoveredCard === opt.id ? 'translateX(0)' : 'translateX(-10px)', transition: 'all 0.3s' }}>
-                    Tap to explore →
-                  </span>
+                <div style={{ position: 'relative', padding: '2rem' }}>
                   <div style={{
-                    width: '44px', height: '44px', borderRadius: '50%',
-                    background: hoveredCard === opt.id ? opt.gradient : `${opt.bgGlow}`,
-                    border: `2px solid ${opt.borderColor}`,
+                    width: '60px', height: '60px', borderRadius: '16px',
+                    background: hoveredCard === opt.id ? opt.gradient : opt.bgGlow.replace('0.12', '0.18'),
+                    border: hoveredCard === opt.id ? 'none' : `1px solid ${opt.borderColor}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.2rem', transition: 'all 0.4s',
-                    transform: hoveredCard === opt.id ? 'scale(1.15) rotate(45deg)' : 'scale(1) rotate(0deg)',
-                    boxShadow: hoveredCard === opt.id ? `0 8px 25px ${opt.bgGlow.replace('0.12', '0.5')}` : 'none',
-                  }}>→</div>
+                    fontSize: '1.8rem', marginBottom: '1.2rem', transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+                    boxShadow: hoveredCard === opt.id ? `0 12px 35px ${opt.bgGlow.replace('0.12', '0.5')}` : 'none',
+                    transform: hoveredCard === opt.id ? 'scale(1.1) rotate(-4deg)' : 'scale(1) rotate(0deg)',
+                  }}>{opt.icon}</div>
+                  <h2 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem', lineHeight: 1.15, color: hoveredCard === opt.id ? '#fff' : 'rgba(255,255,255,0.88)', transition: 'color 0.3s', fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '-0.5px', textTransform: 'uppercase' }}>
+                    {opt.title}
+                  </h2>
+                  <p style={{ fontSize: '0.85rem', lineHeight: 1.65, color: hoveredCard === opt.id ? 'rgba(255,255,255,0.58)' : 'rgba(255,255,255,0.38)', marginBottom: '1.4rem', transition: 'color 0.3s', fontFamily: "'Barlow', sans-serif", fontWeight: 400 }}>
+                    {opt.subtitle}
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginBottom: '1.5rem' }}>
+                    {opt.tags.map((tag) => (
+                      <span key={tag} style={{ padding: '4px 11px', borderRadius: '100px', fontSize: '10px', fontWeight: 700, background: opt.tagColor, border: `1px solid ${opt.tagBorder}`, color: opt.tagText, letterSpacing: '0.06em', transition: 'all 0.25s', textTransform: 'uppercase', fontFamily: "'Barlow', sans-serif" }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: opt.accent, opacity: hoveredCard === opt.id ? 1 : 0, transform: hoveredCard === opt.id ? 'translateX(0)' : 'translateX(-12px)', transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: "'Barlow', sans-serif" }}>
+                      Open →
+                    </span>
+                    <div style={{
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      background: hoveredCard === opt.id ? opt.gradient : opt.bgGlow.replace('0.12','0.15'),
+                      border: `1.5px solid ${opt.borderColor}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1rem', transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
+                      transform: hoveredCard === opt.id ? 'scale(1.2) rotate(45deg)' : 'scale(1) rotate(0deg)',
+                      boxShadow: hoveredCard === opt.id ? `0 8px 28px ${opt.bgGlow.replace('0.12','0.55')}` : 'none',
+                      color: hoveredCard === opt.id ? '#000' : opt.accent,
+                      fontWeight: 900,
+                    }}>→</div>
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       </div>
 
