@@ -281,12 +281,29 @@ export default function StreakPage() {
   const [savingDay,      setSavingDay]      = useState(false);
   const [dietSaving,     setDietSaving]     = useState(false);
   const [masterToggle,   setMasterToggle]   = useState(false); // ← Master Toggle state
+  const [completionSummary, setCompletionSummary] = useState(null); // shown right after completing
+  const [prevDaySummary,    setPrevDaySummary]    = useState(null); // shown on next-day visit
 
   // Helper: read user data from localStorage
   const getUserData = () => {
     try { return JSON.parse(localStorage.getItem('fitstart_user') || '{}'); } catch { return {}; }
   };
   const getStartDate = () => ctxStartDate || getUserData()?.journeyData?.startDate || new Date().toISOString();
+
+  // ── Load previous-day missed summary on mount ──────────────────────────
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('fitstart_missed_summary') || 'null');
+      if (!saved) return;
+      // Only show if it was from a previous day (not today)
+      if (saved.dayNum < currentDay && (saved.missedMeals?.length > 0 || saved.missedMuscles?.length > 0)) {
+        setPrevDaySummary(saved);
+        localStorage.removeItem('fitstart_missed_summary');
+      }
+    } catch (_) {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Stable value used throughout JSX (DayNode weekday labels, modal header, etc.)
   const startDate = ctxStartDate || getUserData()?.journeyData?.startDate || null;
 
@@ -506,10 +523,29 @@ export default function StreakPage() {
         }).catch(() => {});
       }
 
+      // ── Compute missed meals & muscles ────────────────────────────────
+      const missedMealsData = dayMeals
+        .map((slot, i) => ({ name: slot.meal, checked: checkedMeals[i] }))
+        .filter(({ checked }) => !checked)
+        .map(({ name }) => name);
+
+      const missedMusclesData = workoutInfo?.type === 'workout'
+        ? workoutInfo.dayData.muscles.filter((_, i) => !checkedMuscles[i])
+        : [];
+
+      // Save missed summary for next-day reminder
+      const missedSummary = { dayNum: day, missedMeals: missedMealsData, missedMuscles: missedMusclesData, completedAt: new Date().toISOString() };
+      localStorage.setItem('fitstart_missed_summary', JSON.stringify(missedSummary));
+
       // Close modal + reset master toggle
       setSelectedDay(null);
       setModalStep(null);
       setMasterToggle(false);
+
+      // ── Show completion summary if anything was missed ─────────────────
+      if (missedMealsData.length > 0 || missedMusclesData.length > 0) {
+        setCompletionSummary({ dayNum: day, missedMeals: missedMealsData, missedMuscles: missedMusclesData });
+      }
 
       // ── AppreciationModal: weekly (every 7th day) or daily ──────────────
       const isWeekEnd = day % 7 === 0;
@@ -1060,6 +1096,106 @@ export default function StreakPage() {
           weekNumber={appreciationModal.weekNumber}
           onClose={() => setAppreciationModal(null)}
         />
+      )}
+
+      {/* ── IMMEDIATE: Missed Items after completing today ── */}
+      {completionSummary && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 600,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)',
+          padding: '1rem',
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '420px',
+            background: 'linear-gradient(145deg,#0d0f1f,#080a18)',
+            border: '1px solid rgba(251,191,36,0.25)',
+            borderRadius: '24px', padding: '28px',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6), 0 0 40px rgba(251,191,36,0.08)',
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ fontSize: '36px', marginBottom: '10px' }}>📋</div>
+              <h2 style={{ fontSize: '18px', fontWeight: 900, color: '#fff', marginBottom: '4px' }}>Day {completionSummary.dayNum} Summary</h2>
+              <p style={{ fontSize: '12px', color: '#6b7280' }}>Great effort! Here's what you missed today</p>
+            </div>
+            {completionSummary.missedMeals.length > 0 && (
+              <div style={{ marginBottom: '16px', padding: '14px 16px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)', borderRadius: '14px' }}>
+                <p style={{ color: '#fbbf24', fontWeight: 800, fontSize: '13px', marginBottom: '8px' }}>🍽️ Missed Meals</p>
+                {completionSummary.missedMeals.map((m, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', flexShrink: 0 }} />
+                    <span style={{ color: '#d1d5db', fontSize: '13px' }}>{m}</span>
+                  </div>
+                ))}
+                <p style={{ color: '#6b7280', fontSize: '11px', marginTop: '8px', marginBottom: 0 }}>No worries — tomorrow is a fresh start! 🌱</p>
+              </div>
+            )}
+            {completionSummary.missedMuscles.length > 0 && (
+              <div style={{ marginBottom: '16px', padding: '14px 16px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: '14px' }}>
+                <p style={{ color: '#f87171', fontWeight: 800, fontSize: '13px', marginBottom: '8px' }}>💪 Skipped Exercises</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {completionSummary.missedMuscles.map((m, i) => (
+                    <span key={i} style={{ padding: '3px 10px', borderRadius: '99px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontSize: '12px', fontWeight: 600 }}>{m}</span>
+                  ))}
+                </div>
+                <p style={{ color: '#6b7280', fontSize: '11px', marginTop: '8px', marginBottom: 0 }}>Try to include these in your next workout session 💪</p>
+              </div>
+            )}
+            <button
+              onClick={() => setCompletionSummary(null)}
+              style={{
+                width: '100%', padding: '13px', borderRadius: '12px', border: 'none',
+                background: 'linear-gradient(135deg,#22d3ee,#10b981)',
+                color: '#000', fontWeight: 900, fontSize: '14px', cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(34,211,238,0.3)', transition: 'transform 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              Got it — I'll do better tomorrow! 💪
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── NEXT DAY: Yesterday's missed items reminder (bottom banner) ── */}
+      {prevDaySummary && (
+        <div style={{
+          position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+          zIndex: 500, width: '100%', maxWidth: '440px', padding: '0 16px',
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg,#0d0f1f,#080a18)',
+            border: '1px solid rgba(139,92,246,0.3)',
+            borderRadius: '18px', padding: '18px 20px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(139,92,246,0.12)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ color: '#a78bfa', fontWeight: 800, fontSize: '13px', marginBottom: '6px' }}>
+                  ⏰ Yesterday (Day {prevDaySummary.dayNum}) — You missed:
+                </p>
+                {prevDaySummary.missedMeals.length > 0 && (
+                  <p style={{ color: '#d1d5db', fontSize: '12px', marginBottom: '3px' }}>
+                    🍽️ <strong>Meals:</strong> {prevDaySummary.missedMeals.join(', ')}
+                  </p>
+                )}
+                {prevDaySummary.missedMuscles.length > 0 && (
+                  <p style={{ color: '#d1d5db', fontSize: '12px', marginBottom: '3px' }}>
+                    💪 <strong>Exercises:</strong> {prevDaySummary.missedMuscles.join(', ')}
+                  </p>
+                )}
+                <p style={{ color: '#6b7280', fontSize: '11px', marginTop: '6px', marginBottom: 0 }}>
+                  No stress — focus on today and give it your best! 🔥
+                </p>
+              </div>
+              <button
+                onClick={() => setPrevDaySummary(null)}
+                style={{ background: 'none', border: 'none', color: '#4b5563', fontSize: '20px', cursor: 'pointer', padding: '0 4px', flexShrink: 0, lineHeight: 1 }}
+              >×</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Navbar */}
