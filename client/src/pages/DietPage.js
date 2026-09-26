@@ -549,7 +549,7 @@ function DayCompletePanel({ dietType, week, day, checks, plan, onCheckAll, isChe
         onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; }}
         onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
       >
-        {isAllDone ? '🏆 Perfect Day! View Summary →' : '💪 Did My Best — End Daily Diet'}
+        {isAllDone ? '🏆 Perfect Day! View Summary →' : done > 0 ? '✅ Some Meals Completed — Finish Diet' : '💪 Did My Best — End Daily Diet'}
       </button>
 
       {/* Celebration / motivation message below button */}
