@@ -314,20 +314,70 @@ export default function StreakPage() {
     }
 
     setSelectedDay(day);
-    setRestDone(false);
     setDietTypeChoice(null);
 
     const startDate = getUserData()?.journeyData?.startDate || new Date().toISOString();
 
-    // Load diet meals for this day
+    // Compute journey week + day-of-week (0=Mon) — used for localStorage key lookups
+    const journeyWeek = Math.floor((day - 1) / 7);
+    const dow = (() => {
+      const start  = new Date(startDate);
+      const target = new Date(start);
+      target.setDate(start.getDate() + (day - 1));
+      const jsDay = target.getDay();
+      return jsDay === 0 ? 6 : jsDay - 1; // convert to 0=Mon
+    })();
+
+    // ── Load diet meals ───────────────────────────────────────────────────
     const meals = getDietForDay(day, startDate, dietType);
     setDayMeals(meals);
-    setCheckedMeals(Array(meals.length).fill(false));
 
-    // Pre-compute workout info
+    // Pre-load already-checked meal slots from DietPage localStorage.
+    // Key: fitstart_diet_checks_{dietType}_w{journeyWeek}_d{dow}
+    // Value: { "m0_i0": true, "m0_i1": true, ... }
+    // A meal slot mi is "Done" when ALL its visible items are true.
+    try {
+      const dietKey = `fitstart_diet_checks_${dietType}_w${journeyWeek}_d${dow}`;
+      const savedDiet = JSON.parse(localStorage.getItem(dietKey) || '{}');
+      const preCheckedMeals = meals.map((slot, mi) => {
+        const visible = slot.items.filter(i => !i.hide);
+        if (visible.length === 0) return false;
+        return visible.every((_, ii) => savedDiet[`m${mi}_i${ii}`] === true);
+      });
+      setCheckedMeals(preCheckedMeals);
+    } catch (_) {
+      setCheckedMeals(Array(meals.length).fill(false));
+    }
+
+    // ── Load workout info ────────────────────────────────────────────────
     const wInfo = getWorkoutInfoForDay(day, startDate, wDays, planId);
     setWorkoutInfo(wInfo);
-    if (wInfo?.type === 'workout') setCheckedMuscles(Array(wInfo.dayData.muscles.length).fill(false));
+
+    if (wInfo?.type === 'workout') {
+      // Pre-load already-checked muscles from WorkoutPage localStorage.
+      // Key: fitstart_muscles_w{journeyWeek}_{dayName_lowercase}
+      // Value: [true, false, true, ...] — one boolean per muscle
+      try {
+        const muscleKey = `fitstart_muscles_w${journeyWeek}_${wInfo.dayName.toLowerCase().replace(/ /g, '_')}`;
+        const savedMuscles = JSON.parse(localStorage.getItem(muscleKey) || 'null');
+        const count = wInfo.dayData.muscles.length;
+        if (Array.isArray(savedMuscles) && savedMuscles.length === count) {
+          setCheckedMuscles(savedMuscles);
+        } else {
+          setCheckedMuscles(Array(count).fill(false));
+        }
+      } catch (_) {
+        setCheckedMuscles(Array(wInfo.dayData.muscles.length).fill(false));
+      }
+      setRestDone(false);
+    } else if (wInfo?.type === 'rest') {
+      // Pre-load rest day acknowledged state
+      const restKey = `fitstart_rest_done_w${journeyWeek}_${wInfo.dayName.toLowerCase()}`;
+      setRestDone(localStorage.getItem(restKey) === '1');
+    } else {
+      setRestDone(false);
+    }
+
     setModalStep('diet');
   };
 
