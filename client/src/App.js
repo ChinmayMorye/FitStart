@@ -16,15 +16,15 @@ import StreakPage from './pages/StreakPage';
 
 import { JourneyProvider, useJourney } from './context/JourneyContext';
 
-// ── Splash Screen — Cinematic Boot Sequence ─────────────────────────────────
+// ── Splash Screen ─────────────────────────────────────────────────────────────
 function SplashScreen() {
   const [progress, setProgress] = React.useState(0);
   const [bootLine, setBootLine] = React.useState(0);
 
   const BOOT_LINES = [
-    'Initializing neural systems...',
-    'Loading performance matrices...',
-    'Calibrating fitness algorithms...',
+    'Initializing performance engine...',
+    'Loading your fitness profile...',
+    'Calibrating personal algorithms...',
     'Your journey begins now.',
   ];
 
@@ -45,139 +45,69 @@ function SplashScreen() {
     }, 300);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Math.floor(progress / 25)]); // intentional computed dependency
+  }, [Math.floor(progress / 25)]);
 
   return (
-    <div
-      style={{
-        height: '100vh', width: '100vw',
-        background: '#020408',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden', position: 'relative',
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
-      {/* Cyber grid background */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px)',
-        backgroundSize: '80px 80px',
-        maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
-        WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
-      }} />
+    <div style={{
+      height: '100vh', width: '100vw',
+      background: '#0A0A0F',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden', position: 'relative',
+      fontFamily: "'Inter', sans-serif",
+    }}>
+      {/* Ambient glow */}
+      <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '60vw', height: '60vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(182,255,60,0.07) 0%, transparent 65%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '55vw', height: '55vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
-      {/* Ambient orbs */}
-      <div style={{
-        position: 'absolute', top: '-150px', left: '-150px',
-        width: '500px', height: '500px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(0,245,255,0.12) 0%, transparent 70%)',
-        animation: 'float 10s ease-in-out infinite',
-      }} />
-      <div style={{
-        position: 'absolute', bottom: '-150px', right: '-150px',
-        width: '500px', height: '500px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 70%)',
-        animation: 'float2 12s ease-in-out infinite',
-      }} />
-
-      {/* Scanline effect */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2,
-        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,245,255,0.01) 2px, rgba(0,245,255,0.01) 4px)',
-      }} />
+      {/* Subtle grid */}
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none', maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 80%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 80%)' }} />
 
       {/* Central content */}
-      <div style={{ textAlign: 'center', position: 'relative', zIndex: 3 }}>
-        {/* Logo icon with pulsing ring */}
-        <div style={{ position: 'relative', width: '100px', height: '100px', margin: '0 auto 28px' }}>
-          {/* Outer ring */}
+      <div style={{ textAlign: 'center', position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+        {/* Logo icon */}
+        <div style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto 24px' }}>
+          <div style={{ position: 'absolute', inset: '-10px', borderRadius: '50%', border: '1px solid rgba(182,255,60,0.2)', animation: 'pingExpand 2s ease-out infinite' }} />
+          <div style={{ position: 'absolute', inset: '-4px', borderRadius: '50%', border: '1px solid rgba(0,229,255,0.15)', animation: 'pingExpand 2s 0.5s ease-out infinite' }} />
           <div style={{
-            position: 'absolute', inset: '-12px',
-            borderRadius: '50%',
-            border: '1px solid rgba(0,245,255,0.2)',
-            animation: 'pingExpand 2s ease-out infinite',
-          }} />
-          <div style={{
-            position: 'absolute', inset: '-6px',
-            borderRadius: '50%',
-            border: '1px solid rgba(0,245,255,0.15)',
-            animation: 'pingExpand 2s 0.5s ease-out infinite',
-          }} />
-          {/* Main logo box */}
-          <div
-            style={{
-              width: '100px', height: '100px', borderRadius: '26px',
-              background: 'linear-gradient(135deg, #00F5FF, #7C3AED)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '3rem', fontWeight: 900,
-              boxShadow: '0 0 50px rgba(0,245,255,0.5), inset 0 1px 0 rgba(255,255,255,0.2)',
-              animation: 'statPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both',
-              position: 'relative',
-            }}
-          >
-            F
-          </div>
+            width: '80px', height: '80px', borderRadius: '20px',
+            background: 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#0A0A0F', fontSize: '2rem', fontWeight: 900,
+            boxShadow: '0 0 40px rgba(182,255,60,0.4)',
+            animation: 'statPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both',
+          }}>F</div>
         </div>
 
-        {/* Logo wordmark */}
-        <h1
-          style={{
-            fontSize: 'clamp(3rem, 8vw, 5rem)',
-            fontWeight: 900,
-            letterSpacing: '-3px',
-            fontFamily: "'Syne', 'Inter', sans-serif",
-            background: 'linear-gradient(135deg, #00F5FF, #7C3AED, #FF0080)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            backgroundSize: '200% 200%',
-            animation: 'gradientShift 2s ease infinite, fadeIn 0.8s 0.2s both',
-            marginBottom: '8px',
-          }}
-        >
-          FITSTART
-        </h1>
+        {/* Wordmark */}
+        <h1 style={{
+          fontSize: 'clamp(2.5rem, 8vw, 4rem)',
+          fontWeight: 800,
+          letterSpacing: '-2px',
+          fontFamily: "'Inter', sans-serif",
+          background: 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)',
+          backgroundSize: '200% 200%',
+          animation: 'gradientShift 3s ease infinite',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          margin: '0 0 8px',
+        }}>FITSTART</h1>
 
-        {/* Boot text */}
+        {/* Boot line */}
         <p style={{
-          color: 'rgba(0,245,255,0.5)',
+          color: 'rgba(161,161,170,0.7)',
           fontSize: '12px',
-          letterSpacing: '0.25em',
+          letterSpacing: '0.2em',
           textTransform: 'uppercase',
           fontFamily: "'Space Mono', monospace",
-          marginTop: '8px',
-          animation: 'fadeIn 0.6s 0.4s both',
           minHeight: '18px',
-        }}>
-          {BOOT_LINES[bootLine]}
-        </p>
+        }}>{BOOT_LINES[bootLine]}</p>
 
         {/* Progress bar */}
-        <div style={{
-          width: '220px', margin: '28px auto 0',
-          animation: 'fadeIn 0.6s 0.6s both',
-        }}>
-          <div style={{
-            width: '100%', height: '2px',
-            background: 'rgba(255,255,255,0.06)',
-            borderRadius: '2px', overflow: 'hidden',
-          }}>
-            <div style={{
-              height: '100%',
-              width: `${progress}%`,
-              background: 'linear-gradient(90deg, #00F5FF, #7C3AED)',
-              borderRadius: '2px',
-              boxShadow: '0 0 10px rgba(0,245,255,0.6)',
-              transition: 'width 0.05s linear',
-            }} />
+        <div style={{ width: '200px', marginTop: '32px' }}>
+          <div style={{ width: '100%', height: '2px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, #B6FF3C, #00E5FF)', borderRadius: '2px', boxShadow: '0 0 8px rgba(182,255,60,0.5)', transition: 'width 0.05s linear' }} />
           </div>
-          <p style={{
-            textAlign: 'right',
-            fontFamily: "'Space Mono', monospace",
-            fontSize: '10px',
-            color: 'rgba(0,245,255,0.4)',
-            marginTop: '6px',
-            letterSpacing: '0.1em',
-          }}>{progress}%</p>
+          <p style={{ textAlign: 'right', fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(107,107,118,1)', marginTop: '6px' }}>{progress}%</p>
         </div>
       </div>
     </div>
@@ -187,520 +117,401 @@ function SplashScreen() {
 // ── Landing Page Features ────────────────────────────────────────────────────
 const FEATURES = [
   {
-    icon: '🥗',
+    label: 'NUTRITION',
     title: 'Smart Diet Plans',
-    desc: 'AI-crafted meal plans with macros, alternatives & weekly variety.',
-    color: '#00FF87',
-    bg: 'rgba(0,255,135,0.07)',
-    border: 'rgba(0,255,135,0.2)',
-    glow: 'rgba(0,255,135,0.15)',
-    tag: 'NUTRITION',
+    desc: 'AI-crafted meal plans with precise macros, alternatives, and weekly variety to hit your goals.',
+    accentColor: '#B6FF3C',
+    bgAlpha: 'rgba(182,255,60,0.05)',
+    borderAlpha: 'rgba(182,255,60,0.2)',
+    glowAlpha: 'rgba(182,255,60,0.12)',
+    iconSvg: 'nutrition',
   },
   {
-    icon: '🏋️',
+    label: 'TRAINING',
     title: 'Custom Workouts',
-    desc: 'Tailored routines for home or gym, beginner-friendly to elite.',
-    color: '#7C3AED',
-    bg: 'rgba(124,58,237,0.07)',
-    border: 'rgba(124,58,237,0.2)',
-    glow: 'rgba(124,58,237,0.15)',
-    tag: 'TRAINING',
+    desc: 'Tailored exercise routines for home or gym — from beginner-friendly to elite performance.',
+    accentColor: '#00E5FF',
+    bgAlpha: 'rgba(0,229,255,0.05)',
+    borderAlpha: 'rgba(0,229,255,0.2)',
+    glowAlpha: 'rgba(0,229,255,0.12)',
+    iconSvg: 'dumbbell',
   },
   {
-    icon: '🔥',
+    label: 'CONSISTENCY',
     title: 'Streak Tracking',
-    desc: 'Build unstoppable habits with daily streaks & journey milestones.',
-    color: '#FFB800',
-    bg: 'rgba(255,184,0,0.06)',
-    border: 'rgba(255,184,0,0.2)',
-    glow: 'rgba(255,184,0,0.12)',
-    tag: 'HABITS',
+    desc: 'Build unstoppable habits with daily streaks, journey milestones, and accountability tools.',
+    accentColor: '#FF7A00',
+    bgAlpha: 'rgba(255,122,0,0.05)',
+    borderAlpha: 'rgba(255,122,0,0.2)',
+    glowAlpha: 'rgba(255,122,0,0.12)',
+    iconSvg: 'flame',
   },
   {
-    icon: '📊',
+    label: 'ANALYTICS',
     title: 'Progress Insights',
-    desc: 'Visual progress charts, BMI tracking, and body stats at a glance.',
-    color: '#FF0080',
-    bg: 'rgba(255,0,128,0.06)',
-    border: 'rgba(255,0,128,0.2)',
-    glow: 'rgba(255,0,128,0.12)',
-    tag: 'ANALYTICS',
+    desc: 'Visual BMI tracking, body stat trends, and performance charts — all in one clean dashboard.',
+    accentColor: '#B6FF3C',
+    bgAlpha: 'rgba(182,255,60,0.04)',
+    borderAlpha: 'rgba(182,255,60,0.18)',
+    glowAlpha: 'rgba(182,255,60,0.1)',
+    iconSvg: 'chart',
   },
 ];
+
+// SVG icons (Lucide-style, inline) — no emoji as icons per UX guidelines
+function FeatureIcon({ type, color }) {
+  const s = { width: '22px', height: '22px', stroke: color, fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  if (type === 'nutrition') return (
+    <svg style={s} viewBox="0 0 24 24"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v3c0 1.1.9 2 2 2h3v3a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-3h3a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z" /></svg>
+  );
+  if (type === 'dumbbell') return (
+    <svg style={s} viewBox="0 0 24 24"><path d="M6 5v14M18 5v14" /><rect x="3" y="7" width="6" height="10" rx="1" /><rect x="15" y="7" width="6" height="10" rx="1" /><line x1="6" y1="12" x2="18" y2="12" /></svg>
+  );
+  if (type === 'flame') return (
+    <svg style={s} viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
+  );
+  if (type === 'chart') return (
+    <svg style={s} viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /><line x1="2" y1="20" x2="22" y2="20" /></svg>
+  );
+  return null;
+}
 
 // ── Landing Page ─────────────────────────────────────────────────────────────
 function LandingPage() {
   const navigate = useNavigate();
   const [hoveredFeature, setHoveredFeature] = React.useState(null);
 
-  // Scroll-triggered reveal for features
   React.useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          }
-        });
-      },
-      { threshold: 0.15 }
+      (entries) => { entries.forEach((entry) => { if (entry.isIntersecting) entry.target.classList.add('visible'); }); },
+      { threshold: 0.12 }
     );
-    const els = document.querySelectorAll('.reveal-on-scroll');
-    els.forEach(el => observer.observe(el));
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#020408',
-        color: '#F0F4FF',
-        overflowX: 'hidden',
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
-      {/* ── Aurora Background ── */}
+    <div style={{
+      minHeight: '100vh',
+      background: '#0A0A0F',
+      color: '#FFFFFF',
+      overflowX: 'hidden',
+      fontFamily: "'Inter', sans-serif",
+    }}>
+
+      {/* ── Background: ambient orbs + subtle grid ── */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-        {/* Orb 1 */}
-        <div style={{ position: 'absolute', top: '-200px', left: '-200px', width: '700px', height: '700px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,245,255,0.09) 0%, transparent 65%)', animation: 'float 12s ease-in-out infinite' }} />
-        {/* Orb 2 */}
-        <div style={{ position: 'absolute', top: '25%', right: '-200px', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 65%)', animation: 'float2 14s ease-in-out infinite' }} />
-        {/* Orb 3 */}
-        <div style={{ position: 'absolute', bottom: '-150px', left: '25%', width: '550px', height: '550px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,0,128,0.07) 0%, transparent 65%)', animation: 'float 11s ease-in-out infinite' }} />
-        {/* Cyber grid */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'linear-gradient(rgba(0,245,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,255,0.025) 1px, transparent 1px)',
-          backgroundSize: '80px 80px',
-          maskImage: 'radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 100%)',
-        }} />
+        <div className="animate-float" style={{ position: 'absolute', top: '-15%', left: '-10%', width: '55vw', height: '55vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(182,255,60,0.06) 0%, transparent 65%)' }} />
+        <div className="animate-float-2" style={{ position: 'absolute', top: '30%', right: '-15%', width: '50vw', height: '50vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 65%)' }} />
+        <div className="animate-float" style={{ position: 'absolute', bottom: '-10%', left: '30%', width: '45vw', height: '45vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,122,0,0.04) 0%, transparent 65%)', animationDelay: '3s' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)', backgroundSize: '64px 64px', maskImage: 'radial-gradient(ellipse 90% 70% at 50% 30%, black 40%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 90% 70% at 50% 30%, black 40%, transparent 100%)' }} />
       </div>
 
       {/* ── NAVBAR ── */}
-      <nav
-        style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '0 2.5rem', height: '68px',
-          background: 'rgba(2,4,8,0.8)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-        }}
-      >
-        {/* Animated bottom accent */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '1px',
-          background: 'linear-gradient(90deg, transparent 0%, rgba(0,245,255,0.4) 30%, rgba(124,58,237,0.4) 70%, transparent 100%)',
-          backgroundSize: '200% 100%',
-          animation: 'borderSpin 4s linear infinite',
-        }} />
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '0 clamp(24px, 5vw, 64px)',
+        height: '64px',
+        background: 'rgba(10,10,15,0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid #26262F',
+      }}>
+        {/* Accent line bottom */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(182,255,60,0.4) 40%, rgba(0,229,255,0.4) 60%, transparent)', backgroundSize: '200% 100%', animation: 'borderSpin 5s linear infinite' }} />
 
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-          <div className="logo-box-glow" style={{
-            width: '36px', height: '36px', borderRadius: '10px',
-            background: 'linear-gradient(135deg, #00F5FF, #7C3AED)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 900, fontSize: '18px',
-            boxShadow: '0 0 24px rgba(0,245,255,0.45)',
-            fontFamily: "'Syne', sans-serif",
-          }}>F</div>
-          <span style={{
-            fontSize: '1.35rem', fontWeight: 900, letterSpacing: '-1px',
-            fontFamily: "'Syne', sans-serif",
-            background: 'linear-gradient(90deg, #00F5FF, #7C3AED)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>FITSTART</span>
-        </div>
+        <button
+          onClick={() => navigate('/')}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          aria-label="FitStart home"
+        >
+          <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '16px', color: '#0A0A0F', boxShadow: '0 0 20px rgba(182,255,60,0.35)' }}>F</div>
+          <span style={{ fontSize: '17px', fontWeight: 800, letterSpacing: '-0.5px', color: '#FFFFFF' }}>FitStart</span>
+        </button>
 
-        {/* Nav buttons */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        {/* Nav actions */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button
             onClick={() => navigate('/signup')}
-            style={{
-              padding: '8px 22px', borderRadius: '100px',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(255,255,255,0.7)',
-              fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-              transition: 'all 0.25s',
-              backdropFilter: 'blur(8px)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-          >
-            Sign Up
-          </button>
+            style={{ padding: '9px 20px', minHeight: '40px', borderRadius: '100px', background: 'transparent', border: '1px solid #32323E', color: '#A1A1AA', fontSize: '14px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,229,255,0.4)'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#32323E'; e.currentTarget.style.color = '#A1A1AA'; }}
+          >Sign Up</button>
           <button
             onClick={() => navigate('/login')}
-            style={{
-              padding: '8px 22px', borderRadius: '100px',
-              background: 'linear-gradient(135deg, #00F5FF, #7C3AED)',
-              border: 'none', color: '#000',
-              fontSize: '14px', fontWeight: 800, cursor: 'pointer',
-              transition: 'all 0.25s',
-              boxShadow: '0 4px 20px rgba(0,245,255,0.35)',
-              letterSpacing: '0.02em',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.06)'; e.currentTarget.style.boxShadow = '0 6px 32px rgba(0,245,255,0.55)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,245,255,0.35)'; }}
-          >
-            Login
-          </button>
+            style={{ padding: '9px 20px', minHeight: '40px', borderRadius: '100px', background: 'linear-gradient(135deg, #B6FF3C, #00E5FF)', border: 'none', color: '#0A0A0F', fontSize: '14px', fontWeight: 700, cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease', boxShadow: '0 4px 16px rgba(182,255,60,0.35)' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(182,255,60,0.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(182,255,60,0.35)'; }}
+          >Login</button>
         </div>
       </nav>
 
-      {/* ── HERO SECTION ── */}
-      <div
+      {/* ── HERO ── */}
+      <section
+        aria-label="Hero"
         style={{
           position: 'relative', zIndex: 1,
           minHeight: '100vh',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
           textAlign: 'center',
-          padding: '100px 1.5rem 80px',
+          padding: 'clamp(100px, 15vh, 140px) clamp(24px, 5vw, 80px) clamp(64px, 10vh, 96px)',
         }}
       >
         {/* Eyebrow badge */}
         <div
           className="animate-fade-in"
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: '10px',
-            padding: '8px 20px', borderRadius: '100px',
-            background: 'rgba(0,245,255,0.06)',
-            border: '1px solid rgba(0,245,255,0.18)',
-            marginBottom: '36px',
-            fontSize: '11px', fontWeight: 700, color: '#00F5FF',
-            letterSpacing: '0.2em', textTransform: 'uppercase',
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '6px 16px', borderRadius: '100px',
+            background: 'rgba(182,255,60,0.07)',
+            border: '1px solid rgba(182,255,60,0.25)',
+            marginBottom: '32px',
+            fontSize: '11px', fontWeight: 700, color: '#B6FF3C',
+            letterSpacing: '0.18em', textTransform: 'uppercase',
             fontFamily: "'Space Mono', monospace",
-            backdropFilter: 'blur(10px)',
           }}
         >
-          <div style={{ position: 'relative', width: '8px', height: '8px' }}>
-            <span style={{ position: 'absolute', inset: 0, background: '#00F5FF', borderRadius: '50%', animation: 'ping-slow 2s infinite' }} />
-            <span style={{ position: 'absolute', inset: 0, background: '#00F5FF', borderRadius: '50%' }} />
-          </div>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#B6FF3C', display: 'inline-block', boxShadow: '0 0 8px rgba(182,255,60,0.8)' }} />
           Your Ultimate Fitness Companion
         </div>
 
-        {/* Main headline */}
+        {/* Headline — 3-second clarity test */}
         <h1
           className="animate-fade-in delay-100"
           style={{
-            fontSize: 'clamp(4.5rem, 12vw, 11rem)',
-            fontWeight: 900,
-            letterSpacing: '-6px',
-            lineHeight: 0.9,
-            marginBottom: '1.5rem',
-            fontFamily: "'Syne', sans-serif",
+            fontSize: 'clamp(52px, 10vw, 96px)',
+            fontWeight: 800,
+            letterSpacing: '-3px',
+            lineHeight: 1.0,
+            marginBottom: '24px',
+            maxWidth: '900px',
           }}
         >
-          FIT
-          <span
-            style={{
-              background: 'linear-gradient(135deg, #00F5FF 0%, #7C3AED 40%, #FF0080 80%, #00FF87 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              backgroundSize: '300% 300%',
-              animation: 'gradientShift 4s ease infinite',
-              display: 'inline-block',
-              filter: 'drop-shadow(0 0 40px rgba(0,245,255,0.25))',
-            }}
-          >
-            START
+          Train Smarter.{' '}
+          <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)', backgroundSize: '200% 200%', animation: 'gradientShift 4s ease infinite', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            Hit Goals.
           </span>
         </h1>
 
-        {/* Tagline */}
+        {/* Subheadline */}
         <p
           className="animate-fade-in delay-200"
           style={{
-            color: 'rgba(180,200,240,0.45)',
-            fontSize: 'clamp(1rem, 2.2vw, 1.3rem)',
-            maxWidth: '520px',
-            lineHeight: 1.7,
-            marginBottom: '2.5rem',
+            color: '#A1A1AA',
+            fontSize: 'clamp(16px, 2vw, 20px)',
+            maxWidth: '560px',
+            lineHeight: 1.65,
+            marginBottom: '40px',
           }}
         >
-          Push your limits. Track your gains.{' '}
-          <span style={{ color: 'rgba(240,244,255,0.8)', fontWeight: 600 }}>Build the body you deserve.</span>
+          Personalized diet plans, custom workouts, and streak tracking — all in one place.
+          <strong style={{ color: '#FFFFFF', fontWeight: 600 }}> Built for real athletes.</strong>
         </p>
 
-        {/* CTA Buttons */}
-        <div className="animate-fade-in delay-300" style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '3.5rem' }}>
+        {/* CTAs */}
+        <div className="animate-fade-in delay-300" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '56px' }}>
           <button
             id="start-journey-btn"
             onClick={() => navigate('/signup')}
             style={{
-              padding: '17px 40px',
+              padding: '16px 36px', minHeight: '52px',
               borderRadius: '100px',
-              background: 'linear-gradient(135deg, #00F5FF 0%, #7C3AED 50%, #FF0080 100%)',
-              backgroundSize: '200% 200%',
-              animation: 'gradientShift 3s ease infinite',
-              border: 'none', color: '#fff',
-              fontSize: '1.05rem', fontWeight: 800,
+              background: 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)',
+              backgroundSize: '200% 200%', animation: 'gradientShift 4s ease infinite',
+              border: 'none', color: '#0A0A0F',
+              fontSize: '16px', fontWeight: 700,
               cursor: 'pointer',
-              boxShadow: '0 12px 40px rgba(0,245,255,0.4), 0 0 80px rgba(0,245,255,0.08)',
-              transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s',
-              letterSpacing: '0.02em',
-              position: 'relative',
-              overflow: 'hidden',
+              boxShadow: '0 8px 32px rgba(182,255,60,0.4)',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              letterSpacing: '0.01em',
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.07) translateY(-3px)'; e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,245,255,0.5), 0 0 100px rgba(0,245,255,0.12)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1) translateY(0)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,245,255,0.4), 0 0 80px rgba(0,245,255,0.08)'; }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.04)'; e.currentTarget.style.boxShadow = '0 16px 48px rgba(182,255,60,0.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(182,255,60,0.4)'; }}
           >
-            ⚡ Start Your Journey →
+            Start Your Journey →
           </button>
           <button
             id="signin-btn"
             onClick={() => navigate('/login')}
             style={{
-              padding: '17px 34px',
+              padding: '16px 32px', minHeight: '52px',
               borderRadius: '100px',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(0,245,255,0.2)',
-              color: 'rgba(240,244,255,0.75)',
-              fontSize: '1.05rem', fontWeight: 600,
+              background: 'transparent',
+              border: '1px solid #32323E',
+              color: '#A1A1AA',
+              fontSize: '16px', fontWeight: 600,
               cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-              backdropFilter: 'blur(12px)',
+              transition: 'all 0.2s ease',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,245,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(0,245,255,0.45)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0,245,255,0.15)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(0,245,255,0.2)'; e.currentTarget.style.color = 'rgba(240,244,255,0.75)'; e.currentTarget.style.boxShadow = 'none'; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,229,255,0.5)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.boxShadow = '0 0 16px rgba(0,229,255,0.12)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#32323E'; e.currentTarget.style.color = '#A1A1AA'; e.currentTarget.style.boxShadow = 'none'; }}
           >
             Sign In
           </button>
         </div>
 
-        {/* Stat pills row */}
+        {/* Social proof stats */}
         <div
           className="animate-fade-in delay-400"
           style={{
-            display: 'flex', alignItems: 'center', gap: '0',
-            padding: '14px 28px', borderRadius: '100px',
-            background: 'rgba(6,13,26,0.6)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            display: 'flex', alignItems: 'center',
+            gap: '0',
+            padding: '16px 24px', borderRadius: '100px',
+            background: 'rgba(20,20,27,0.8)',
+            border: '1px solid #26262F',
             backdropFilter: 'blur(16px)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
           }}
         >
           {[
-            { val: '10K+', label: 'Athletes', color: '#00F5FF' },
-            { val: '500+', label: 'Workouts', color: '#00FF87' },
-            { val: '98%', label: 'Satisfaction', color: '#7C3AED' },
+            { val: '10K+', label: 'Athletes', color: '#B6FF3C' },
+            { val: '500+', label: 'Workouts', color: '#00E5FF' },
+            { val: '98%',  label: 'Success Rate', color: '#FF7A00' },
           ].map((s, i) => (
             <React.Fragment key={s.label}>
-              {i > 0 && <div style={{ width: '1px', height: '32px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />}
-              <div style={{ textAlign: 'center', padding: '0 18px' }}>
-                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: s.color, fontFamily: "'Space Mono', monospace", lineHeight: 1.2, textShadow: `0 0 16px ${s.color}60` }}>{s.val}</div>
-                <div style={{ fontSize: '9px', color: 'rgba(180,200,240,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '3px' }}>{s.label}</div>
+              {i > 0 && <div style={{ width: '1px', height: '28px', background: '#26262F', margin: '0 8px' }} />}
+              <div style={{ textAlign: 'center', padding: '0 16px' }}>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: s.color, lineHeight: 1.2, fontFamily: "'Space Mono', monospace" }}>{s.val}</div>
+                <div style={{ fontSize: '11px', color: '#6B6B76', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '2px', fontWeight: 500 }}>{s.label}</div>
               </div>
             </React.Fragment>
           ))}
         </div>
 
-        {/* Scroll hint */}
-        <div
-          className="animate-fade-in delay-500"
-          style={{
-            position: 'absolute', bottom: '28px',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-            color: 'rgba(255,255,255,0.18)', fontSize: '9px', letterSpacing: '0.25em',
-            textTransform: 'uppercase', fontFamily: "'Space Mono', monospace",
-          }}
-        >
+        {/* Scroll indicator */}
+        <div className="animate-fade-in delay-500" style={{ position: 'absolute', bottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', color: '#6B6B76', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace" }}>
           <span>Scroll</span>
-          <div style={{
-            width: '22px', height: '38px', borderRadius: '11px',
-            border: '1px solid rgba(255,255,255,0.12)',
-            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-            padding: '5px',
-          }}>
-            <div style={{
-              width: '3px', height: '9px', borderRadius: '3px',
-              background: 'rgba(0,245,255,0.5)',
-              animation: 'float2 2s ease-in-out infinite',
-            }} />
+          <div style={{ width: '20px', height: '34px', borderRadius: '10px', border: '1px solid #32323E', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '4px' }}>
+            <div style={{ width: '2px', height: '8px', borderRadius: '2px', background: '#B6FF3C', animation: 'float2 2s ease-in-out infinite' }} />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* ── FEATURES SECTION ── */}
-      <div
+      <section
+        aria-label="Features"
         style={{
           position: 'relative', zIndex: 1,
-          padding: '6rem 1.5rem 8rem',
-          maxWidth: '1100px', margin: '0 auto',
+          padding: 'clamp(64px, 10vw, 96px) clamp(24px, 5vw, 80px)',
         }}
       >
-        {/* Section header */}
-        <div className="reveal-on-scroll" style={{ textAlign: 'center', marginBottom: '4.5rem' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            padding: '5px 14px', borderRadius: '100px',
-            background: 'rgba(0,245,255,0.05)', border: '1px solid rgba(0,245,255,0.12)',
-            fontSize: '10px', fontWeight: 700, color: '#00F5FF',
-            letterSpacing: '0.22em', textTransform: 'uppercase',
-            fontFamily: "'Space Mono', monospace",
-            marginBottom: '20px',
-          }}>
-            PLATFORM FEATURES
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+
+          {/* Section header */}
+          <div className="reveal-on-scroll" style={{ textAlign: 'center', marginBottom: 'clamp(40px, 6vw, 64px)' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 14px', borderRadius: '100px', background: 'rgba(0,229,255,0.06)', border: '1px solid rgba(0,229,255,0.18)', fontSize: '11px', fontWeight: 700, color: '#00E5FF', letterSpacing: '0.18em', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace", marginBottom: '20px' }}>Platform Features</div>
+            <h2 style={{ fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 700, letterSpacing: '-1.5px', lineHeight: 1.15, marginBottom: '16px' }}>
+              Everything you need to{' '}
+              <span style={{ background: 'linear-gradient(135deg, #B6FF3C, #00E5FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>transform</span>
+            </h2>
+            <p style={{ color: '#A1A1AA', fontSize: '17px', maxWidth: '520px', margin: '0 auto', lineHeight: 1.65 }}>
+              A complete ecosystem designed to track, train, and transform — intelligently.
+            </p>
           </div>
-          <h2 style={{
-            fontSize: 'clamp(2.5rem, 5.5vw, 3.8rem)',
-            fontWeight: 900, letterSpacing: '-2.5px',
-            fontFamily: "'Syne', sans-serif",
-            lineHeight: 1.05,
-          }}>
-            Everything you need to{' '}
-            <span style={{
-              background: 'linear-gradient(135deg, #00FF87, #00F5FF)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>
-              transform
-            </span>
-          </h2>
-          <p style={{ color: 'rgba(180,200,240,0.38)', fontSize: '1.05rem', marginTop: '14px', maxWidth: '460px', margin: '14px auto 0', lineHeight: 1.65 }}>
-            A complete ecosystem designed to track, train, and transform — intelligently.
+
+          {/* Feature cards grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px', marginBottom: 'clamp(64px, 10vw, 96px)' }}>
+            {FEATURES.map((f, i) => (
+              <div
+                key={f.label}
+                className="reveal-on-scroll card-holo"
+                onMouseEnter={() => setHoveredFeature(i)}
+                onMouseLeave={() => setHoveredFeature(null)}
+                style={{
+                  padding: '28px',
+                  borderRadius: '16px',
+                  background: hoveredFeature === i ? f.bgAlpha : '#14141B',
+                  border: `1px solid ${hoveredFeature === i ? f.borderAlpha : '#26262F'}`,
+                  transition: 'all 0.3s ease',
+                  transform: hoveredFeature === i ? 'translateY(-6px)' : 'translateY(0)',
+                  boxShadow: hoveredFeature === i ? `0 20px 48px ${f.glowAlpha}` : '0 2px 16px rgba(0,0,0,0.5)',
+                  cursor: 'default',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Label chip */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: '100px', background: `${f.accentColor}12`, border: `1px solid ${f.accentColor}30`, fontSize: '10px', fontWeight: 700, color: f.accentColor, letterSpacing: '0.15em', fontFamily: "'Space Mono', monospace", marginBottom: '20px' }}>{f.label}</div>
+
+                {/* Icon box */}
+                <div style={{
+                  width: '48px', height: '48px', borderRadius: '12px',
+                  background: `${f.accentColor}10`, border: `1px solid ${f.accentColor}25`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginBottom: '16px',
+                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                  transform: hoveredFeature === i ? 'scale(1.1)' : 'scale(1)',
+                  boxShadow: hoveredFeature === i ? `0 0 20px ${f.glowAlpha}` : 'none',
+                }}>
+                  <FeatureIcon type={f.iconSvg} color={f.accentColor} />
+                </div>
+
+                <h3 style={{ fontWeight: 700, fontSize: '18px', marginBottom: '10px', color: '#FFFFFF', lineHeight: 1.3 }}>{f.title}</h3>
+                <p style={{ fontSize: '14px', color: '#6B6B76', lineHeight: 1.65 }}>{f.desc}</p>
+
+                {/* Bottom accent line on hover */}
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: `linear-gradient(90deg, transparent, ${f.accentColor}, transparent)`, opacity: hoveredFeature === i ? 1 : 0, transition: 'opacity 0.3s' }} />
+              </div>
+            ))}
+          </div>
+
+          {/* CTA Banner */}
+          <div
+            className="reveal-on-scroll"
+            style={{
+              borderRadius: '20px',
+              padding: 'clamp(48px, 8vw, 80px) clamp(32px, 5vw, 80px)',
+              textAlign: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              background: '#14141B',
+              border: '1px solid #26262F',
+            }}
+          >
+            {/* Top accent bar */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, transparent, #B6FF3C 40%, #00E5FF 60%, transparent)', backgroundSize: '200% 100%', animation: 'borderSpin 4s linear infinite' }} />
+            {/* Ambient glow */}
+            <div style={{ position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)', width: '400px', height: '200px', background: 'radial-gradient(ellipse, rgba(182,255,60,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+            <div style={{ position: 'relative' }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #B6FF3C, #00E5FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 8px 32px rgba(182,255,60,0.35)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0A0A0F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+              </div>
+              <h2 style={{ fontSize: 'clamp(24px, 4vw, 40px)', fontWeight: 700, letterSpacing: '-1px', lineHeight: 1.2, marginBottom: '16px', color: '#FFFFFF' }}>
+                Your transformation{' '}
+                <span style={{ background: 'linear-gradient(135deg, #B6FF3C, #00E5FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>starts now</span>
+              </h2>
+              <p style={{ color: '#6B6B76', marginBottom: '40px', fontSize: '16px', lineHeight: 1.65, maxWidth: '400px', margin: '0 auto 40px' }}>
+                Free to start. No excuses. Just results.
+              </p>
+              <button
+                id="bottom-cta-btn"
+                onClick={() => navigate('/signup')}
+                style={{
+                  padding: '16px 48px', minHeight: '52px', borderRadius: '100px',
+                  background: 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)',
+                  backgroundSize: '200% 200%', animation: 'gradientShift 4s ease infinite',
+                  border: 'none', color: '#0A0A0F', fontSize: '16px', fontWeight: 700,
+                  cursor: 'pointer', boxShadow: '0 8px 32px rgba(182,255,60,0.4)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                  letterSpacing: '0.01em',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.04)'; e.currentTarget.style.boxShadow = '0 16px 48px rgba(182,255,60,0.5)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(182,255,60,0.4)'; }}
+              >
+                Get Started — It's Free
+              </button>
+            </div>
+          </div>
+
+          {/* Footer note */}
+          <p style={{ textAlign: 'center', color: '#6B6B76', fontSize: '13px', marginTop: '32px', fontFamily: "'Space Mono', monospace" }}>
+            © 2025 FitStart · Built for champions
           </p>
         </div>
-
-        {/* Feature cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '6rem' }}>
-          {FEATURES.map((f, i) => (
-            <div
-              key={f.title}
-              className="reveal-on-scroll card-holo"
-              onMouseEnter={() => setHoveredFeature(i)}
-              onMouseLeave={() => setHoveredFeature(null)}
-              style={{
-                padding: '2rem',
-                borderRadius: '20px',
-                background: hoveredFeature === i ? f.bg : 'rgba(6,13,26,0.65)',
-                border: `1px solid ${hoveredFeature === i ? f.border : 'rgba(255,255,255,0.07)'}`,
-                transition: 'all 0.4s cubic-bezier(0.34,1.56,0.64,1)',
-                transform: hoveredFeature === i ? 'translateY(-8px) scale(1.01)' : 'translateY(0)',
-                boxShadow: hoveredFeature === i ? `0 24px 60px ${f.glow}, 0 0 40px ${f.glow}` : '0 4px 24px rgba(0,0,0,0.3)',
-                cursor: 'default',
-                backdropFilter: 'blur(20px)',
-                position: 'relative',
-                overflow: 'hidden',
-                transitionDelay: `${i * 0.04}s`,
-              }}
-            >
-              {/* Tag chip */}
-              <div style={{
-                display: 'inline-flex', alignItems: 'center',
-                padding: '3px 10px', borderRadius: '100px',
-                background: `${f.color}12`, border: `1px solid ${f.color}28`,
-                fontSize: '9px', fontWeight: 700,
-                color: f.color, letterSpacing: '0.15em',
-                fontFamily: "'Space Mono', monospace", marginBottom: '18px',
-              }}>{f.tag}</div>
-
-              {/* Icon */}
-              <div style={{
-                fontSize: '2rem', marginBottom: '16px',
-                width: '56px', height: '56px', borderRadius: '16px',
-                background: f.bg, border: `1px solid ${f.color}28`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s',
-                transform: hoveredFeature === i ? 'scale(1.12) rotate(-6deg)' : 'scale(1)',
-                boxShadow: hoveredFeature === i ? `0 0 28px ${f.glow}` : 'none',
-              }}>{f.icon}</div>
-
-              <h3 style={{
-                fontWeight: 800, fontSize: '1.05rem', marginBottom: '8px',
-                color: hoveredFeature === i ? '#F0F4FF' : 'rgba(240,244,255,0.88)',
-                fontFamily: "'Space Grotesk', sans-serif",
-                transition: 'color 0.3s',
-              }}>{f.title}</h3>
-              <p style={{ fontSize: '13.5px', color: 'rgba(180,200,240,0.42)', lineHeight: 1.65 }}>{f.desc}</p>
-
-              {/* Bottom glow line */}
-              <div style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px',
-                background: `linear-gradient(90deg, transparent, ${f.color}, transparent)`,
-                opacity: hoveredFeature === i ? 1 : 0, transition: 'opacity 0.35s',
-              }} />
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom CTA Banner */}
-        <div
-          className="reveal-on-scroll"
-          style={{
-            borderRadius: '28px',
-            padding: '4.5rem 2.5rem',
-            textAlign: 'center',
-            position: 'relative',
-            overflow: 'hidden',
-            background: 'rgba(6,13,26,0.7)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(24px)',
-          }}
-        >
-          {/* Glow layers */}
-          <div style={{ position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '500px', height: '250px', background: 'radial-gradient(ellipse, rgba(0,245,255,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: '-80px', left: '20%', width: '400px', height: '200px', background: 'radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          {/* Animated top border */}
-          <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
-            background: 'linear-gradient(90deg, transparent, #00F5FF, #7C3AED, #FF0080, transparent)',
-            backgroundSize: '200% 100%', animation: 'borderSpin 3s linear infinite',
-          }} />
-
-          <div style={{ position: 'relative' }}>
-            <div style={{
-              fontSize: '4rem', marginBottom: '20px',
-              filter: 'drop-shadow(0 0 20px rgba(255,184,0,0.5))',
-              animation: 'floatSlow 4s ease-in-out infinite',
-              display: 'inline-block',
-            }}>🏆</div>
-            <h2 style={{
-              fontSize: 'clamp(1.8rem, 4vw, 3rem)',
-              fontWeight: 900, marginBottom: '14px',
-              letterSpacing: '-2px', fontFamily: "'Syne', sans-serif", lineHeight: 1.08,
-            }}>
-              Your transformation{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #00F5FF, #FF0080)',
-                backgroundSize: '200% 200%', animation: 'gradientShift 3s ease infinite',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>starts now</span>
-            </h2>
-            <p style={{ color: 'rgba(180,200,240,0.4)', marginBottom: '2.5rem', fontSize: '1rem', lineHeight: 1.65 }}>
-              Free to start. No excuses. Just results.
-            </p>
-            <button
-              id="bottom-cta-btn"
-              onClick={() => navigate('/signup')}
-              style={{
-                padding: '17px 48px', borderRadius: '100px',
-                background: 'linear-gradient(135deg, #00F5FF 0%, #7C3AED 50%, #FF0080 100%)',
-                backgroundSize: '200% 200%', animation: 'gradientShift 3s ease infinite',
-                border: 'none', color: '#fff', fontSize: '1rem', fontWeight: 800,
-                cursor: 'pointer', boxShadow: '0 12px 40px rgba(0,245,255,0.4)',
-                transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s',
-                letterSpacing: '0.02em',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08) translateY(-3px)'; e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,245,255,0.5)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,245,255,0.4)'; }}
-            >
-              Get Started — It's Free ⚡
-            </button>
-          </div>
-        </div>
-
-        {/* Footer note */}
-        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '13px', marginTop: '2rem' }}>
-          © 2025 FitStart · Built for champions ✦
-        </p>
-      </div>
+      </section>
     </div>
   );
 }

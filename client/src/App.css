@@ -1,13 +1,13 @@
-/* FitStart App Base Styles */
+/* FitStart App Base Styles — token-aligned */
 
 body {
-  background: #0A0A0A;
-  color: #EAEAEA;
+  background: #0A0A0F;
+  color: #FFFFFF;
   margin: 0;
   padding: 0;
 }
 
 .App {
   min-height: 100vh;
-  background: #0A0A0A;
+  background: #0A0A0F;
 }
