@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { FadeInWhenVisible, StaggerContainer, StaggerItem } from '../components/FadeInWhenVisible';
 import { useNavigate } from 'react-router-dom';
 
 const API_BASE = process.env.REACT_APP_API_URL || '';
@@ -214,16 +216,18 @@ const Login = ({ onLoginSuccess }) => {
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <StaggerContainer style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {FEATURES.map(({ Icon, text, color }) => (
-              <div key={text} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0, background: `${color}12`, border: `1px solid ${color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon size={18} color={color} />
+              <StaggerItem key={text}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0, background: `${color}12`, border: `1px solid ${color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon size={18} color={color} />
+                  </div>
+                  <span style={{ color: '#A1A1AA', fontSize: '14px', fontWeight: 500 }}>{text}</span>
                 </div>
-                <span style={{ color: '#A1A1AA', fontSize: '14px', fontWeight: 500 }}>{text}</span>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
 
         <div style={{ position: 'relative', zIndex: 2, paddingTop: '16px', borderTop: '1px solid #26262F' }}>
@@ -234,7 +238,7 @@ const Login = ({ onLoginSuccess }) => {
 
       {/* RIGHT: Login form */}
       <div className="login-right" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative', zIndex: 1 }}>
-        <div style={{ width: '100%', maxWidth: '440px' }}>
+        <FadeInWhenVisible delay={0.05}><div style={{ width: '100%', maxWidth: '440px' }}>
 
           {/* Mobile logo */}
           <div className="login-mobile-logo" style={{ marginBottom: '32px', textAlign: 'center' }}>
@@ -292,14 +296,15 @@ const Login = ({ onLoginSuccess }) => {
                   </div>
                 </div>
 
-                <button id="login-submit" type="submit" disabled={loading}
-                  style={{ width: '100%', padding: '15px', borderRadius: '100px', border: 'none', background: loading ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)', color: loading ? '#6B6B76' : '#0A0A0F', fontSize: '15px', fontWeight: 700, fontFamily: 'inherit', cursor: loading ? 'not-allowed' : 'pointer', boxShadow: loading ? 'none' : '0 4px 24px rgba(182,255,60,0.3)', transition: 'transform 0.2s ease, box-shadow 0.2s ease', letterSpacing: '0.01em', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', minHeight: '52px' }}
-                  onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(182,255,60,0.45)'; } }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = loading ? 'none' : '0 4px 24px rgba(182,255,60,0.3)'; }}>
+                <motion.button id="login-submit" type="submit" disabled={loading}
+                  whileHover={loading ? {} : { scale: 1.03, boxShadow: '0 8px 32px rgba(182,255,60,0.45)', transition: { type: 'spring', stiffness: 260, damping: 20 } }}
+                  whileTap={loading ? {} : { scale: 0.97, transition: { type: 'spring', stiffness: 400, damping: 40 } }}
+                  className="btn-shimmer"
+                  style={{ width: '100%', padding: '15px', borderRadius: '100px', border: 'none', background: loading ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)', color: loading ? '#6B6B76' : '#0A0A0F', fontSize: '15px', fontWeight: 700, fontFamily: 'inherit', cursor: loading ? 'not-allowed' : 'pointer', boxShadow: loading ? 'none' : '0 4px 24px rgba(182,255,60,0.3)', letterSpacing: '0.01em', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', minHeight: '52px' }}>
                   {loading ? (
                     <><svg style={{ width: '16px', height: '16px', animation: 'rotateGlow 0.8s linear infinite' }} viewBox="0 0 24 24" fill="none"><circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>Authenticating...</>
                   ) : (<>Sign In <IconArrow size={16} color="#0A0A0F" /></>)}
-                </button>
+                </motion.button>
               </form>
 
               <div style={{ margin: '24px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -324,6 +329,7 @@ const Login = ({ onLoginSuccess }) => {
             <span style={{ color: '#00E5FF', cursor: 'pointer', textDecoration: 'underline' }}>Privacy</span>
           </p>
         </div>
+        </FadeInWhenVisible>
       </div>
     </div>
   );

@@ -1196,7 +1196,192 @@ input:focus { outline: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PREFERS REDUCED MOTION
+   ANIMATION KEYFRAMES
+   GPU-safe: only transform + opacity
+   Never animate: width, height, margin, padding, top/left
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Blob drift — ambient background orbs ── */
+@keyframes blobDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(3%, 5%) scale(1.04); }
+  66%  { transform: translate(-4%, 2%) scale(0.97); }
+  100% { transform: translate(2%, -4%) scale(1.02); }
+}
+
+/* ── Shimmer sheen — CTA button highlight sweep ── */
+@keyframes shimmerSheen {
+  0%   { transform: translateX(-100%) skewX(-12deg); }
+  100% { transform: translateX(220%) skewX(-12deg); }
+}
+
+/* ── Gradient shift — animated gradient text ── */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+/* ── Glow pulse — breathing glow on accent elements ── */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(182,255,60,0.3); }
+  50%       { box-shadow: 0 0 36px rgba(182,255,60,0.55), 0 0 60px rgba(0,229,255,0.2); }
+}
+
+/* ── Ping expand — radar ring effect ── */
+@keyframes pingExpand {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+/* ── Border spin — moving gradient border highlight ── */
+@keyframes borderSpin {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+/* ── Stat pop — card entrance spring ── */
+@keyframes statPop {
+  0%   { opacity: 0; transform: scale(0.72) translateY(12px); }
+  65%  { transform: scale(1.04) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Fade in up — generic entrance ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Shake — error state ── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+/* ── Check pop — success icon ── */
+@keyframes checkPop {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  60%  { transform: scale(1.25) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ── Heart pulse ── */
+@keyframes heartPulse {
+  0%, 100% { transform: scale(1); }
+  30%       { transform: scale(1.3); }
+  60%       { transform: scale(0.92); }
+}
+
+/* ── Toast slide in ── */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATION UTILITY CLASSES
+═══════════════════════════════════════════════════════════════ */
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-shake {
+  animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.animate-stat-pop {
+  animation: statPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-check-pop {
+  animation: checkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-heart-pulse {
+  animation: heartPulse 0.7s ease-in-out;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.animate-ping {
+  animation: pingExpand 2s ease-out infinite;
+}
+
+.animate-toast-in {
+  animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Shimmer CTA button ── */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.18),
+    transparent
+  );
+  transform: skewX(-12deg);
+  animation: shimmerSheen 2.8s ease infinite;
+  pointer-events: none;
+}
+
+/* ── Ambient gradient mesh blob ── */
+.ambient-blob {
+  border-radius: 50%;
+  filter: blur(1px);
+  will-change: transform;
+  animation: blobDrift 20s ease-in-out infinite alternate;
+}
+.ambient-blob-2 {
+  animation-duration: 26s;
+  animation-direction: alternate-reverse;
+}
+.ambient-blob-3 {
+  animation-duration: 32s;
+}
+
+/* ── Gradient text (animated) ── */
+.gradient-text-anim {
+  background: linear-gradient(135deg, #B6FF3C 0%, #00E5FF 50%, #B6FF3C 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* ── Focus ring for inputs ── */
+.input-focus-ring:focus {
+  border-color: rgba(0, 229, 255, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.10) !important;
+  outline: none;
+}
+
+/* ── Stagger children utility ── */
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+
+/* ═══════════════════════════════════════════════════════════════
+   PREFERS REDUCED MOTION — override all non-essential animation
 ═══════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -1204,9 +1389,28 @@ input:focus { outline: none; }
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .reveal-on-scroll {
+
+  /* Preserve fade-only transitions — instant is jarring */
+  .reveal-on-scroll,
+  .animate-fade-in-up {
     opacity: 1;
     transform: none;
     transition: none;
+    animation: none;
+  }
+
+  /* Disable purely decorative animations */
+  .ambient-blob,
+  .ambient-blob-2,
+  .ambient-blob-3,
+  .btn-shimmer::after,
+  .animate-ping {
+    animation: none !important;
+  }
+
+  /* Disable gradient shift — keep static gradient */
+  .gradient-text-anim {
+    animation: none !important;
+    background-position: 0% 0% !important;
   }
 }

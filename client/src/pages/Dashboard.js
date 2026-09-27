@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { FadeInWhenVisible, StaggerContainer, StaggerItem } from '../components/FadeInWhenVisible';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import { useNavigate } from 'react-router-dom';
 
 const API_BASE = process.env.REACT_APP_API_URL || '';
@@ -53,13 +56,15 @@ function AmbientBg() {
 
 function StatCard({ icon, value, label, color }) {
   return (
-    <div style={{ padding: '20px 16px', borderRadius: '16px', background: '#14141B', border: `1px solid ${color}28`, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '4px', transition: 'border-color 0.2s, box-shadow 0.2s', cursor: 'default' }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = `${color}55`; e.currentTarget.style.boxShadow = `0 0 24px ${color}18`; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = `${color}28`; e.currentTarget.style.boxShadow = 'none'; }}>
+    <motion.div
+      whileHover={{ y: -4, scale: 1.02, boxShadow: `0 0 28px ${color}22`, borderColor: `${color}55`, transition: { type: 'spring', stiffness: 260, damping: 20 } }}
+      whileTap={{ scale: 0.97 }}
+      style={{ padding: '20px 16px', borderRadius: '16px', background: '#14141B', border: `1px solid ${color}28`, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '4px', cursor: 'default' }}
+    >
       <div style={{ color, marginBottom: '4px' }}>{icon}</div>
       <p style={{ fontSize: '1.4rem', fontWeight: 800, color, letterSpacing: '-0.5px', fontFamily: "'Space Mono', monospace", margin: 0 }}>{value}</p>
       <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#6B6B76', fontWeight: 600, margin: 0 }}>{label}</p>
-    </div>
+    </motion.div>
   );
 }
 
@@ -233,7 +238,7 @@ function Dashboard({ user: propUser, token, onLogout }) {
       </nav>
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: '1280px', margin: '0 auto', padding: 'clamp(80px, 12vw, 96px) clamp(16px, 4vw, 48px) clamp(48px, 8vw, 80px)' }}>
-        <div style={{ marginBottom: 'clamp(32px, 5vw, 48px)', textAlign: 'center' }}>
+        <FadeInWhenVisible delay={0} style={{ marginBottom: 'clamp(32px, 5vw, 48px)', textAlign: 'center' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '5px 14px', borderRadius: '100px', background: 'rgba(182,255,60,0.07)', border: '1px solid rgba(182,255,60,0.22)', fontSize: '11px', fontWeight: 700, color: '#B6FF3C', letterSpacing: '0.16em', textTransform: 'uppercase', fontFamily: "'Space Mono', monospace", marginBottom: '16px' }}>
             <span style={{ width: '6px', height: '6px', background: '#B6FF3C', borderRadius: '50%', boxShadow: '0 0 8px #B6FF3C', display: 'inline-block' }} />
             Dashboard
@@ -243,19 +248,21 @@ function Dashboard({ user: propUser, token, onLogout }) {
             <span style={{ background: 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{user.username || 'Champion'}</span>?
           </h1>
           <p style={{ color: '#6B6B76', fontSize: '15px', lineHeight: 1.6, margin: 0 }}>Your personalized hub for diet, workouts, and progress tracking.</p>
-        </div>
+        </FadeInWhenVisible>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: 'clamp(32px, 5vw, 48px)' }}>
-          <StatCard icon={<IconRuler size={18} color="#00E5FF" />} value={user.height ? `${user.height}cm` : '—'} label="Height" color="#00E5FF" />
-          <StatCard icon={<IconScale size={18} color="#B6FF3C" />} value={user.weight ? `${user.weight}kg` : '—'} label="Weight" color="#B6FF3C" />
-          <StatCard icon={<IconCalendar size={18} color="#FF7A00" />} value={user.age ? `${user.age}yr` : '—'} label="Age" color="#FF7A00" />
-          <StatCard icon={<IconActivity size={18} color={bmiColor} />} value={bmi || '—'} label={bmiLabel} color={bmiColor} />
-        </div>
+        <StaggerContainer style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: 'clamp(32px, 5vw, 48px)' }}>
+          <StaggerItem><StatCard icon={<IconRuler size={18} color="#00E5FF" />} value={user.height ? `${user.height}cm` : '—'} label="Height" color="#00E5FF" /></StaggerItem>
+          <StaggerItem><StatCard icon={<IconScale size={18} color="#B6FF3C" />} value={user.weight ? `${user.weight}kg` : '—'} label="Weight" color="#B6FF3C" /></StaggerItem>
+          <StaggerItem><StatCard icon={<IconCalendar size={18} color="#FF7A00" />} value={user.age ? `${user.age}yr` : '—'} label="Age" color="#FF7A00" /></StaggerItem>
+          <StaggerItem><StatCard icon={<IconActivity size={18} color={bmiColor} />} value={bmi || '—'} label={bmiLabel} color={bmiColor} /></StaggerItem>
+        </StaggerContainer>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '20px', marginBottom: 'clamp(32px, 5vw, 48px)' }}>
+        <StaggerContainer style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '20px', marginBottom: 'clamp(32px, 5vw, 48px)' }}>
           {options.map(opt => (
-            <button key={opt.id} id={`option-card-${opt.id}`} onClick={() => navigate(opt.route)} onMouseEnter={() => setHovered(opt.id)} onMouseLeave={() => setHovered(null)}
-              style={{ display: 'block', textAlign: 'left', width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '28px', borderRadius: '20px', overflow: 'hidden', position: 'relative', background: hovered === opt.id ? opt.bgGlow : '#14141B', borderWidth: '1px', borderStyle: 'solid', borderColor: hovered === opt.id ? opt.borderColor : '#26262F', transform: hovered === opt.id ? 'translateY(-6px)' : 'translateY(0)', boxShadow: hovered === opt.id ? `0 20px 48px ${opt.bgGlow}` : '0 2px 16px rgba(0,0,0,0.4)', transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)' }}>
+            <StaggerItem key={opt.id}><motion.button id={`option-card-${opt.id}`} onClick={() => navigate(opt.route)} onMouseEnter={() => setHovered(opt.id)} onMouseLeave={() => setHovered(null)}
+              whileHover={{ y: -8, scale: 1.01, transition: { type: 'spring', stiffness: 200, damping: 22 } }}
+              whileTap={{ scale: 0.97, y: 0, transition: { type: 'spring', stiffness: 400, damping: 40 } }}
+              style={{ display: 'block', textAlign: 'left', width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '28px', borderRadius: '20px', overflow: 'hidden', position: 'relative', background: hovered === opt.id ? opt.bgGlow : '#14141B', borderWidth: '1px', borderStyle: 'solid', borderColor: hovered === opt.id ? opt.borderColor : '#26262F', boxShadow: hovered === opt.id ? `0 20px 48px ${opt.bgGlow}` : '0 2px 16px rgba(0,0,0,0.4)', transition: 'background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: opt.gradient, opacity: hovered === opt.id ? 1 : 0, transition: 'opacity 0.3s ease' }} />
               <div style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '11px', fontWeight: 700, color: '#6B6B76', fontFamily: "'Space Mono', monospace" }}>{opt.number}</div>
               <div style={{ width: '52px', height: '52px', borderRadius: '14px', marginBottom: '20px', background: hovered === opt.id ? `${opt.accent}18` : 'rgba(255,255,255,0.04)', border: hovered === opt.id ? `1px solid ${opt.accent}35` : '1px solid #26262F', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease', transform: hovered === opt.id ? 'scale(1.08)' : 'scale(1)' }}>
@@ -274,9 +281,9 @@ function Dashboard({ user: propUser, token, onLogout }) {
                   <IconArrow size={14} color={hovered === opt.id ? '#0A0A0F' : '#6B6B76'} />
                 </div>
               </div>
-            </button>
+            </motion.button></StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
 
         <div style={{ padding: '20px 24px', borderRadius: '16px', background: '#14141B', border: '1px solid #26262F', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
@@ -289,11 +296,12 @@ function Dashboard({ user: propUser, token, onLogout }) {
               { label: 'Change Username', action: () => openModal('username'), color: '#B6FF3C' },
               { label: 'Sign Out', action: handleLogout, color: '#f87171', danger: true },
             ].map(btn => (
-              <button key={btn.label} onClick={btn.action} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', borderRadius: '100px', background: btn.danger ? 'transparent' : `${btn.color}0D`, border: `1px solid ${btn.danger ? 'rgba(239,68,68,0.25)' : `${btn.color}28`}`, color: btn.color, fontSize: '13px', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', transition: 'all 0.2s', minHeight: '38px' }}
-                onMouseEnter={e => { e.currentTarget.style.background = btn.danger ? 'rgba(239,68,68,0.08)' : `${btn.color}18`; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = btn.danger ? 'transparent' : `${btn.color}0D`; e.currentTarget.style.transform = 'translateY(0)'; }}>
+              <motion.button key={btn.label} onClick={btn.action}
+                whileHover={{ scale: 1.04, y: -1, transition: { type: 'spring', stiffness: 260, damping: 20 } }}
+                whileTap={{ scale: 0.96, transition: { type: 'spring', stiffness: 400, damping: 40 } }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', borderRadius: '100px', background: btn.danger ? 'transparent' : `${btn.color}0D`, border: `1px solid ${btn.danger ? 'rgba(239,68,68,0.25)' : `${btn.color}28`}`, color: btn.color, fontSize: '13px', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', minHeight: '38px' }}>
                 {btn.label}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>

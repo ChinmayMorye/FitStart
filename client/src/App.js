@@ -5,7 +5,11 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { LogoIntro } from './components/LogoIntro';
+import { useReducedMotion } from './hooks/useReducedMotion';
 import LoginPage from './pages/Login';
 import SignupPage from './pages/Signup';
 import Onboarding from './pages/Onboarding';
@@ -16,103 +20,23 @@ import StreakPage from './pages/StreakPage';
 
 import { JourneyProvider, useJourney } from './context/JourneyContext';
 
-// ── Splash Screen ─────────────────────────────────────────────────────────────
-function SplashScreen() {
-  const [progress, setProgress] = React.useState(0);
-  const [bootLine, setBootLine] = React.useState(0);
-
-  const BOOT_LINES = [
-    'Initializing performance engine...',
-    'Loading your fitness profile...',
-    'Calibrating personal algorithms...',
-    'Your journey begins now.',
-  ];
-
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) { clearInterval(interval); return 100; }
-        return p + 2;
-      });
-    }, 20);
-    return () => clearInterval(interval);
-  }, []);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setBootLine(b => Math.min(b + 1, BOOT_LINES.length - 1));
-    }, 300);
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Math.floor(progress / 25)]);
-
+// ── Page Transition Wrapper ────────────────────────────────────────────────────
+function PageTransition({ children }) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const prefersReduced = useReducedMotion();
   return (
-    <div style={{
-      height: '100vh', width: '100vw',
-      background: '#0A0A0F',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      overflow: 'hidden', position: 'relative',
-      fontFamily: "'Inter', sans-serif",
-    }}>
-      {/* Ambient glow */}
-      <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '60vw', height: '60vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(182,255,60,0.07) 0%, transparent 65%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '55vw', height: '55vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 65%)', pointerEvents: 'none' }} />
-
-      {/* Subtle grid */}
-      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none', maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 80%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 80%)' }} />
-
-      {/* Central content */}
-      <div style={{ textAlign: 'center', position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
-        {/* Logo icon */}
-        <div style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto 24px' }}>
-          <div style={{ position: 'absolute', inset: '-10px', borderRadius: '50%', border: '1px solid rgba(182,255,60,0.2)', animation: 'pingExpand 2s ease-out infinite' }} />
-          <div style={{ position: 'absolute', inset: '-4px', borderRadius: '50%', border: '1px solid rgba(0,229,255,0.15)', animation: 'pingExpand 2s 0.5s ease-out infinite' }} />
-          <div style={{
-            width: '80px', height: '80px', borderRadius: '20px',
-            background: 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#0A0A0F', fontSize: '2rem', fontWeight: 900,
-            boxShadow: '0 0 40px rgba(182,255,60,0.4)',
-            animation: 'statPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both',
-          }}>F</div>
-        </div>
-
-        {/* Wordmark */}
-        <h1 style={{
-          fontSize: 'clamp(2.5rem, 8vw, 4rem)',
-          fontWeight: 800,
-          letterSpacing: '-2px',
-          fontFamily: "'Inter', sans-serif",
-          background: 'linear-gradient(135deg, #B6FF3C 0%, #00E5FF 100%)',
-          backgroundSize: '200% 200%',
-          animation: 'gradientShift 3s ease infinite',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          margin: '0 0 8px',
-        }}>FITSTART</h1>
-
-        {/* Boot line */}
-        <p style={{
-          color: 'rgba(161,161,170,0.7)',
-          fontSize: '12px',
-          letterSpacing: '0.2em',
-          textTransform: 'uppercase',
-          fontFamily: "'Space Mono', monospace",
-          minHeight: '18px',
-        }}>{BOOT_LINES[bootLine]}</p>
-
-        {/* Progress bar */}
-        <div style={{ width: '200px', marginTop: '32px' }}>
-          <div style={{ width: '100%', height: '2px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, #B6FF3C, #00E5FF)', borderRadius: '2px', boxShadow: '0 0 8px rgba(182,255,60,0.5)', transition: 'width 0.05s linear' }} />
-          </div>
-          <p style={{ textAlign: 'right', fontFamily: "'Space Mono', monospace", fontSize: '10px', color: 'rgba(107,107,118,1)', marginTop: '6px' }}>{progress}%</p>
-        </div>
-      </div>
-    </div>
+    <motion.div
+      initial={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -16 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      style={{ minHeight: '100vh' }}
+    >
+      {children}
+    </motion.div>
   );
 }
+
 
 // ── Landing Page Features ────────────────────────────────────────────────────
 const FEATURES = [
@@ -598,6 +522,8 @@ const API_BASE = process.env.REACT_APP_API_URL || '';
 // Inner component that can access JourneyContext
 function AppRoutes() {
   const { syncFromProfile } = useJourney();
+  const location = useLocation();
+  const prefersReduced = useReducedMotion();
 
   const [showSplash, setShowSplash] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -667,7 +593,8 @@ function AppRoutes() {
         })();
       } catch (_) {}
     }
-    const timer = setTimeout(() => setShowSplash(false), 1200);
+    // Splash duration: 3000ms full animation, 1000ms for prefers-reduced-motion (handled inside LogoIntro)
+    const timer = setTimeout(() => setShowSplash(false), 3200);
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -729,9 +656,20 @@ function AppRoutes() {
 
   const hasInfo = !!(userInfo?.weight && userInfo?.height && userInfo?.age);
 
-  if (showSplash) return <SplashScreen />;
+  if (showSplash) {
+    return <LogoIntro durationMs={3000} onComplete={() => setShowSplash(false)} />;
+  }
 
   return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        initial={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -16 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        style={{ minHeight: '100vh' }}
+      >
     <Routes>
       {/* Landing */}
       <Route
@@ -822,6 +760,8 @@ function AppRoutes() {
 
 
     </Routes>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
